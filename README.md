@@ -23,7 +23,7 @@ To use LLMinator, follow these simple steps:
 - Access the web interface by opening the provided URL in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
 
-## 🤝 Contributing
+## 🤝 Contributions
 
 We welcome contributions from the community to enhance LLMinator further. If you'd like to contribute, please follow these guidelines:
 
