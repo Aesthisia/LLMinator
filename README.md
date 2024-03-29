@@ -1,8 +1,7 @@
 ## LLMinator: Run & Test LLMs
 #### Gradio based tool with integrated chatbot to run & test LLMs directly from HuggingFace. 
 
-A simple tool built on Gradio, LangChain & Torch.
-
+An easy-to-use tool made with Gradio, LangChain, and Torch. It's designed to be user-friendly while using powerful technology to get things done smoothly.
 ![image](https://github.com/Subhanshu0027/LLMinator/assets/91900622/622afab4-6165-44fd-a9fc-a439e0cb5063)
 
 
