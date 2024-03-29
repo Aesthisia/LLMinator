@@ -1,7 +1,10 @@
 ## LLMinator: Run & Test LLMs
 #### Gradio based tool with integrated chatbot to run & test LLMs directly from HuggingFace. 
 
-A simple tool built on Gradio, LongChain & Torch. 
+A simple tool built on Gradio, LangChain & Torch.
+
+![image](https://github.com/Subhanshu0027/LLMinator/assets/91900622/622afab4-6165-44fd-a9fc-a439e0cb5063)
+
 
 ### ⚡ Features
 
@@ -10,6 +13,23 @@ A simple tool built on Gradio, LongChain & Torch.
 - Load any LLM repo directly from HuggingFace.
 - Supports both CPU & Cuda modes. 
 
+## 🚀 How to use
 
+To use LLMinator, follow these simple steps:
+
+- Clone the LLMinator repository from GitHub.
+- Navigate to the directory containing the cloned repository.
+- Run the LLMinator tool using the command python llm.py.
+- Access the web interface by opening the provided URL in your browser.
+- Start interacting with the chatbot and experimenting with LLMs!
+
+## 🤝 Contributing
+
+We welcome contributions from the community to enhance LLMinator further. If you'd like to contribute, please follow these guidelines:
+
+- Fork the LLMinator repository on GitHub.
+- Create a new branch for your feature or bug fix.
+- Test your changes thoroughly.
+- Submit a pull request, providing a clear description of the changes you've made.
 
 Reach out to us: info@aesthisia.com
