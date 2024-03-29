@@ -7,7 +7,12 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
+from core import list_download_models, format_model_name
+
 cache_dir = os.path.join(os.getcwd(), "models")
+
+#models = list_download_models(cache_dir) TODO: Remove after integration
+#print(format_model_name(models[0])) TODO: Remove after integration
 
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)

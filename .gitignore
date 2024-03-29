@@ -1,2 +1,8 @@
 #ignore downloaded models
-models/*
+models/models--*
+models/.locks
+models/tmp*
+
+
+#compiled files
+*.pyc
