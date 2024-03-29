@@ -1,1 +1,2 @@
-.safetensors
+#ignore downloaded models
+models/*
