@@ -1,16 +1,27 @@
-import torch
+import os, torch
 from threading import Thread
 from typing import Optional
 
 import gradio as gr
 from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
+
+cache_dir = os.path.join(os.getcwd(), "models")
 
 def initialize_model_and_tokenizer(model_name):
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, trust_remote_code=True)
+    config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name, 
+        config=config, 
+        cache_dir=cache_dir, 
+        torch_dtype=torch.bfloat16, 
+        trust_remote_code=True)
+    
     model.eval()
     #model.cuda() #uncomment for cuda
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
 
