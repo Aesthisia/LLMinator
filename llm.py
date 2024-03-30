@@ -67,6 +67,7 @@ with gr.Blocks(fill_height=True) as demo:
                 variant="primary",
                 interactive=True)
             repo_id = gr.Textbox(
+                value="stabilityai/stable-code-instruct-3b",
                 label="Hugging Face Repo",
                 info="Default: stabilityai/stable-code-instruct-3b")
             load_model_btn = gr.Button(
@@ -107,8 +108,8 @@ with gr.Blocks(fill_height=True) as demo:
             history[-1][1] += character
             yield history
 
-    msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
-    stop.click(lambda: None, None, chatbot, queue=False)
+    submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
+    stop.click(None, None, None, cancels=[submit_event], queue=False)
     load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
 
 demo.queue()
