@@ -7,12 +7,10 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-from core import list_download_models, format_model_name
+from core import list_download_models, format_model_name, remove_dir
 
 cache_dir = os.path.join(os.getcwd(), "models")
-
-#models = list_download_models(cache_dir) TODO: Remove after integration
-#print(format_model_name(models[0])) TODO: Remove after integration
+saved_models = list_download_models(cache_dir)
 
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
@@ -62,31 +60,54 @@ model, tokenizer = initialize_model_and_tokenizer("stabilityai/stable-code-instr
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
         with gr.Column(scale=1):
-            title = gr.Button(value="LLMinator",
+            title = gr.Button(
+                value="LLMinator",
+                scale=1,
                 variant="primary",
                 interactive=True)
-            repo_id = gr.Textbox(
-                value="stabilityai/stable-code-instruct-3b",
-                label="Hugging Face Repo",
-                info="Default: stabilityai/stable-code-instruct-3b")
-            load_model_btn = gr.Button(
-                value="Load Model",
-                variant="secondary",
-                interactive=True,)
-            execution_provider = gr.Radio(
-                ["cuda", "cpu"], 
-                value="cpu", 
-                label="Execution providers",
-                info="Select Device")
-        with gr.Column(scale=4):
-            chatbot = gr.Chatbot(scale=4)
             with gr.Group():
-                msg = gr.Textbox()
+                repo_id = gr.Textbox(
+                    value="stabilityai/stable-code-instruct-3b",
+                    label="Hugging Face Repo",
+                    info="Default: stabilityai/stable-code-instruct-3b")
+                load_model_btn = gr.Button(
+                    value="Load Model",
+                    variant="secondary",
+                    interactive=True,)
+            
+            with gr.Group():
+                execution_provider = gr.Radio(
+                    ["cuda", "cpu"], 
+                    value="cpu", 
+                    label="Execution providers",
+                    info="Select Device")
+
+            with gr.Group():
+                saved_models = gr.Dropdown(
+                    choices=saved_models,
+                    max_choices=5, 
+                    filterable=True, 
+                    label="Saved Models",
+                    info="Models available in the disk"
+                )
+                offload_models = gr.ClearButton(
+                    value="Remove Cached Models",
+                    variant="Secondary",
+                    interactive=True,
+                )
+
+        with gr.Column(scale=4):
+            with gr.Group():
+                chatbot = gr.Chatbot(scale=4)
+                msg = gr.Textbox(label="Prompt")
                 stop = gr.Button("Stop")
     llm_chain, llm = init_chain(model, tokenizer)
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
+
+    def removeModelCache():
+        remove_dir(cache_dir)
     
     def updateExecutionProvider(provider):
         if provider == "cuda":
@@ -103,7 +124,6 @@ with gr.Blocks(fill_height=True) as demo:
         else:
             raise gr.Error("Repo can not be empty!")
 
-
     def bot(history):
         print("Question: ", history[-1][0])
         llm_chain.run(question=history[-1][0])
@@ -117,6 +137,8 @@ with gr.Blocks(fill_height=True) as demo:
     stop.click(None, None, None, cancels=[submit_event], queue=False)
     load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
     execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
+    saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
+    offload_models.click(removeModelCache, None, saved_models, queue=False, show_progress="full")
 
 demo.queue()
 demo.launch(server_name="0.0.0.0")

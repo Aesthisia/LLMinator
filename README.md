@@ -18,7 +18,7 @@ To use LLMinator, follow these simple steps:
 
 - Clone the LLMinator repository from GitHub.
 - Navigate to the directory containing the cloned repository.
-- Run the LLMinator tool using the command python llm.py.
+- Run the LLMinator tool using the command `python webui.py`.
 - Access the web interface by opening the provided URL in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
 
