@@ -25,7 +25,7 @@ def initialize_model_and_tokenizer(model_name):
         trust_remote_code=True)
     
     model.eval()
-    #model.cuda() #uncomment for cuda
+    model.cpu()
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
@@ -39,8 +39,7 @@ def init_chain(model, tokenizer):
 
         def _call(self, prompt, stop=None, run_manager=None) -> str:
             self.streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, Timeout=5)
-            #inputs = tokenizer(prompt, return_tensors="pt").to(model.device) #uncomment for cuda
-            inputs = tokenizer(prompt, return_tensors="pt") #uncomment for cpu
+            inputs = tokenizer(prompt, return_tensors="pt").to(model.device) #uncomment for cuda
             kwargs = dict(input_ids=inputs["input_ids"], streamer=self.streamer, max_new_tokens=1024, temperature=0.5, top_p=0.95, top_k=100, do_sample=True, use_cache=True)
             thread = Thread(target=model.generate, kwargs=kwargs)
             thread.start()
@@ -76,7 +75,7 @@ with gr.Blocks(fill_height=True) as demo:
                 interactive=True,)
             execution_provider = gr.Radio(
                 ["cuda", "cpu"], 
-                value="cuda", 
+                value="cpu", 
                 label="Execution providers",
                 info="Select Device")
         with gr.Column(scale=4):
@@ -89,6 +88,12 @@ with gr.Blocks(fill_height=True) as demo:
     def user(user_message, history):
         return "", history + [[user_message, None]]
     
+    def updateExecutionProvider(provider):
+        if provider == "cuda":
+            model.cuda()
+        else:
+            model.cpu()
+
     def loadModel(repo_id):
         global llm_chain, llm
         if repo_id:
@@ -104,13 +109,14 @@ with gr.Blocks(fill_height=True) as demo:
         llm_chain.run(question=history[-1][0])
         history[-1][1] = ""
         for character in llm.streamer:
-            print(character)
+            #print(character)
             history[-1][1] += character
             yield history
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
     stop.click(None, None, None, cancels=[submit_event], queue=False)
     load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
+    execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
 
 demo.queue()
 demo.launch(server_name="0.0.0.0")
