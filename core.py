@@ -1,5 +1,9 @@
 import os, shutil
 
+default_repo_id = "openai-community/gpt2"
+default_repo_id_parts = default_repo_id.split("/")
+default_model_folder = f"models--{'--'.join(default_repo_id_parts)}"
+
 def format_model_name(directory_name):
     parts = directory_name.split("--")
     return "/".join(parts[1:])
@@ -11,10 +15,11 @@ def list_download_models(cache_dir):
 
 def remove_dir(path):
     try:
-        for folder in os.listdir(path):
-            if folder != "models--openai-community--gpt2":
-                full_path = os.path.join(path, folder)
-                if os.path.isdir(full_path):
-                    shutil.rmtree(full_path)
+        for model in os.listdir(path):
+            if model != default_model_folder:
+                model_path = os.path.join(path, model)
+                if os.path.isdir(model_path):
+                    shutil.rmtree(model_path)
+        print("successfully removed cached models!")
     except OSError as e:
         print(f"Error: {e.strerror}")
