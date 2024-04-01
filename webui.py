@@ -1,7 +1,6 @@
-import os, torch
+import os, torch ,sys ,argparse
 from threading import Thread
-from typing import Optional
-import argparse
+from typing import Optional 
 
 from configparser import ConfigParser
 import gradio as gr
@@ -9,20 +8,11 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-from core import list_download_models, remove_dir
-
-def read_config():
-    config = ConfigParser()
-    config.read('config.ini')
-    return config
-
-def update_config(config):
-    with open('config.ini', 'w') as configfile:
-        config.write(configfile)
-
+from core import list_download_models, remove_dir, read_config ,update_config
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models = list_download_models(cache_dir)
+
 
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
@@ -67,18 +57,7 @@ def init_chain(model, tokenizer):
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Optional arguments for --host & --port.') 
-    parser.add_argument('--host', type=str, default='0.0.0.0', help='The host IP to run the server on.')
-    parser.add_argument('--port', type=int, default=7860, help='The port to run the server on.')
-
-    return parser.parse_args()
-
-args = parse_args()
-
 config = read_config() 
-cache_dir = os.path.join(os.getcwd(), "models")
-saved_models = list_download_models(cache_dir)
 
 model_id = config.get('Settings', 'repo_id')
 model, tokenizer = initialize_model_and_tokenizer(model_id)
@@ -101,11 +80,8 @@ def load_model(repo_id):
     if repo_id:
         model, tokenizer = initialize_model_and_tokenizer(repo_id)
         llm_chain, llm = init_chain(model, tokenizer)
-        # Read the current configuration
         config = read_config()
-        # Update the repo_id in the configuration
         config.set('Settings', 'repo_id', repo_id)
-        # Write the updated configuration back to the config.ini file
         update_config(config)
         return gr.update(value=repo_id)
     else:
@@ -162,25 +138,6 @@ with gr.Blocks(fill_height=True) as demo:
 
     def removeModelCache():
         remove_dir(cache_dir)
-    
-    def updateExecutionProvider(provider):
-        if provider == "cuda":
-            if torch.cuda.is_available():
-                model.cuda()
-            else:
-                raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
-
-        else:
-            model.cpu()
-
-    def loadModel(repo_id):
-        global llm_chain, llm
-        if repo_id:
-            model, tokenizer = initialize_model_and_tokenizer(repo_id)
-            llm_chain, llm = init_chain(model, tokenizer)
-            return gr.update(value=repo_id)
-        else:
-            raise gr.Error("Repo can not be empty!")
 
     def bot(history):
         print("Question: ", history[-1][0])
@@ -193,11 +150,11 @@ with gr.Blocks(fill_height=True) as demo:
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
     stop.click(None, None, None, cancels=[submit_event], queue=False)
-    load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
+    load_model_btn.click(load_model, repo_id, repo_id, queue=False, show_progress="full")
     execution_provider.change(fn=update_execution_provider, inputs=execution_provider, queue=False, show_progress="full")
     saved_models.change(load_model, saved_models, repo_id, queue=False, show_progress="full")
     offload_models.click(removeModelCache, None, saved_models, queue=False, show_progress="full")
 
 
 demo.queue()
-demo.launch(server_name = args.host , server_port = args.port)
+demo.launch()
