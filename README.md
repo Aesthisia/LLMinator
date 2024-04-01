@@ -29,8 +29,8 @@ To use LLMinator, follow these simple steps:
 
 | Argument Command  | Default | Description |
 |----------|----------|----------|
-| -- host | 127.0.0.1 | Host or IP address on which the server will listen for incoming connections.|
-| -- port| 7860 | Launch gradio with given server port |
+| --host | 127.0.0.1 | Host or IP address on which the server will listen for incoming connections.|
+| --port| 7860 | Launch gradio with given server port |
 
 ## 🤝 Contributions
 
