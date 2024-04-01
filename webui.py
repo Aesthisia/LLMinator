@@ -76,7 +76,7 @@ def parse_args():
 
 args = parse_args()
 
-config = read_config()  # <--- CHANGE HERE
+config = read_config() 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models = list_download_models(cache_dir)
 
