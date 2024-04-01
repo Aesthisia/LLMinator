@@ -15,3 +15,12 @@ def remove_dir(path):
         print(f"Directory '{path}' successfully removed.")
     except OSError as e:
         print(f"Error: {e.strerror}")
+
+def read_config():
+    config = ConfigParser()
+    config.read('config.ini')
+    return config
+
+def update_config(config):
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)
