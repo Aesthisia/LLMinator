@@ -11,7 +11,10 @@ def list_download_models(cache_dir):
 
 def remove_dir(path):
     try:
-        shutil.rmtree(os.path.join(path, "/*"))
-        print(f"Directory '{path}' successfully removed.")
+        for folder in os.listdir(path):
+            if folder != "models--openai-community--gpt2":
+                full_path = os.path.join(path, folder)
+                if os.path.isdir(full_path):
+                    shutil.rmtree(full_path)
     except OSError as e:
         print(f"Error: {e.strerror}")

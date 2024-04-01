@@ -10,7 +10,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStream
 from core import list_download_models, format_model_name, remove_dir
 
 cache_dir = os.path.join(os.getcwd(), "models")
-saved_models = list_download_models(cache_dir)
+saved_models_list = list_download_models(cache_dir)
 
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -88,7 +88,7 @@ with gr.Blocks(fill_height=True) as demo:
 
             with gr.Group():
                 saved_models = gr.Dropdown(
-                    choices=saved_models,
+                    choices=saved_models_list,
                     max_choices=5, 
                     filterable=True, 
                     label="Saved Models",
@@ -112,6 +112,7 @@ with gr.Blocks(fill_height=True) as demo:
 
     def removeModelCache():
         remove_dir(cache_dir)
+        return gr.update(value="openai-community/gpt2"), gr.update(choices=["openai-community/gpt2"], value="openai-community/gpt2")
     
     def updateExecutionProvider(provider):
         if provider == "cuda":
@@ -147,7 +148,7 @@ with gr.Blocks(fill_height=True) as demo:
     load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
     execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
     saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
-    offload_models.click(removeModelCache, None, saved_models, queue=False, show_progress="full")
+    offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
 
 demo.queue()
 demo.launch(server_name="0.0.0.0")
