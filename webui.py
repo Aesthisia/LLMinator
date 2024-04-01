@@ -12,6 +12,9 @@ from core import list_download_models, format_model_name, remove_dir
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models = list_download_models(cache_dir)
 
+#check if cuda is available
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
 
@@ -23,7 +26,8 @@ def initialize_model_and_tokenizer(model_name):
         trust_remote_code=True)
     
     model.eval()
-    model.cpu()
+    model.to(device)
+
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
@@ -78,7 +82,7 @@ with gr.Blocks(fill_height=True) as demo:
             with gr.Group():
                 execution_provider = gr.Radio(
                     ["cuda", "cpu"], 
-                    value="cpu", 
+                    value=device, 
                     label="Execution providers",
                     info="Select Device")
 
@@ -113,6 +117,7 @@ with gr.Blocks(fill_height=True) as demo:
         if provider == "cuda":
             if torch.cuda.is_available():
                 model.cuda()
+                print("Model loaded in cuda", model)
             else:
                 raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
 
@@ -133,7 +138,7 @@ with gr.Blocks(fill_height=True) as demo:
         llm_chain.run(question=history[-1][0])
         history[-1][1] = ""
         for character in llm.streamer:
-            #print(character)
+            print(character)
             history[-1][1] += character
             yield history
 
