@@ -25,6 +25,13 @@ To use LLMinator, follow these simple steps:
 - Access the web interface by opening the provided URL in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
 
+### Command line arguments 
+
+| Argument Command  | Default | Description |
+|----------|----------|----------|
+| -- host | 127.0.0.1 | Host or IP address on which the server will listen for incoming connections.|
+| -- port| 7860 | Launch gradio with given server port |
+
 ## 🤝 Contributions
 
 We welcome contributions from the community to enhance LLMinator further. If you'd like to contribute, please follow these guidelines:
