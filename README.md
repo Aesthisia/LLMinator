@@ -2,7 +2,9 @@
 #### Gradio based tool with integrated chatbot to locally run & test LLMs directly from HuggingFace. 
 
 An easy-to-use tool made with Gradio, LangChain, and Torch.
-![image](https://github.com/Subhanshu0027/LLMinator/assets/91900622/622afab4-6165-44fd-a9fc-a439e0cb5063)
+
+![image](https://github.com/Aesthisia/LLMinator/assets/91900622/54cc0b3f-c5a8-4470-bcc5-a22e5fd24707)
+
 
 
 ### ⚡ Features
@@ -18,6 +20,7 @@ To use LLMinator, follow these simple steps:
 
 - Clone the LLMinator repository from GitHub.
 - Navigate to the directory containing the cloned repository.
+- Install the required dependencies by running `pip install -r requirements.txt`.
 - Run the LLMinator tool using the command `python webui.py`.
 - Access the web interface by opening the provided URL in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
