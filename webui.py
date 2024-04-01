@@ -55,7 +55,7 @@ def init_chain(model, tokenizer):
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
 
-model, tokenizer = initialize_model_and_tokenizer("stabilityai/stable-code-instruct-3b")
+model, tokenizer = initialize_model_and_tokenizer("openai-community/gpt2")
 
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
@@ -67,9 +67,9 @@ with gr.Blocks(fill_height=True) as demo:
                 interactive=True)
             with gr.Group():
                 repo_id = gr.Textbox(
-                    value="stabilityai/stable-code-instruct-3b",
+                    value="openai-community/gpt2",
                     label="Hugging Face Repo",
-                    info="Default: stabilityai/stable-code-instruct-3b")
+                    info="Default: openai-community/gpt2")
                 load_model_btn = gr.Button(
                     value="Load Model",
                     variant="secondary",
@@ -111,7 +111,11 @@ with gr.Blocks(fill_height=True) as demo:
     
     def updateExecutionProvider(provider):
         if provider == "cuda":
-            model.cuda()
+            if torch.cuda.is_available():
+                model.cuda()
+            else:
+                raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
+
         else:
             model.cpu()
 
