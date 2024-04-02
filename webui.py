@@ -13,7 +13,6 @@ from core import list_download_models, remove_dir, read_config ,update_config
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models = list_download_models(cache_dir)
 
-
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
 
@@ -21,7 +20,7 @@ def initialize_model_and_tokenizer(model_name):
         model_name, 
         config=config, 
         cache_dir=cache_dir, 
-        torch_dtype=torch.bfloat16, 
+        torch_dtype=torch.bfloat16,
         trust_remote_code=True)
     
     model.eval()
@@ -58,8 +57,8 @@ def init_chain(model, tokenizer):
     return llm_chain, llm
 
 config = read_config() 
-
 model_id = config.get('Settings', 'repo_id')
+execution_id = config.get('Settings', 'execution_provider')
 model, tokenizer = initialize_model_and_tokenizer(model_id)
 
 def update_execution_provider(provider):
@@ -108,7 +107,7 @@ with gr.Blocks(fill_height=True) as demo:
             with gr.Group():
                 execution_provider = gr.Radio(
                     ["cuda", "cpu"], 
-                    value="cpu", 
+                    value=execution_id, 
                     label="Execution providers",
                     info="Select Device")
 
@@ -157,4 +156,4 @@ with gr.Blocks(fill_height=True) as demo:
 
 
 demo.queue()
-demo.launch()
+demo.launch(server_name="0.0.0.0")
