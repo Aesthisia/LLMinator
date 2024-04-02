@@ -1,6 +1,6 @@
 import os, torch ,sys ,argparse
 from threading import Thread
-from typing import Optional 
+from typing import Optional
 
 from configparser import ConfigParser
 import gradio as gr
