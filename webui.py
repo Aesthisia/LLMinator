@@ -1,6 +1,6 @@
 import os, torch ,sys ,argparse
 from threading import Thread
-from typing import Optional
+from typing import Optional 
 
 from configparser import ConfigParser
 import gradio as gr
@@ -8,7 +8,7 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-from core import list_download_models, remove_dir, read_config, update_config
+from core import list_download_models, remove_dir, read_config ,update_config
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models = list_download_models(cache_dir)
@@ -18,8 +18,8 @@ def initialize_model_and_tokenizer(model_name):
 
     model = AutoModelForCausalLM.from_pretrained(
         model_name, 
-        config=config,
-        cache_dir=cache_dir,
+        config=config, 
+        cache_dir=cache_dir, 
         torch_dtype=torch.bfloat16,
         trust_remote_code=True)
     
