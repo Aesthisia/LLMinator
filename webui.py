@@ -8,14 +8,10 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-<<<<<<< HEAD
 from core import list_download_models, remove_dir, read_config ,update_config
-=======
-from core import list_download_models, format_model_name, remove_dir, default_repo_id
->>>>>>> 9f7656798f1b11df5a83b567698c2cc1f0dade99
 
 cache_dir = os.path.join(os.getcwd(), "models")
-saved_models_list = list_download_models(cache_dir)
+saved_models = list_download_models(cache_dir)
 
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
@@ -60,7 +56,6 @@ def init_chain(model, tokenizer):
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
 
-<<<<<<< HEAD
 config = read_config() 
 model_id = config.get('Settings', 'repo_id')
 execution_id = config.get('Settings', 'execution_provider')
@@ -90,9 +85,6 @@ def load_model(repo_id):
         return gr.update(value=repo_id)
     else:
         raise gr.Error("Repo can not be empty!")
-=======
-model, tokenizer = initialize_model_and_tokenizer(default_repo_id)
->>>>>>> 9f7656798f1b11df5a83b567698c2cc1f0dade99
 
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
@@ -104,11 +96,7 @@ with gr.Blocks(fill_height=True) as demo:
                 interactive=True)
             with gr.Group():
                 repo_id = gr.Textbox(
-<<<<<<< HEAD
                     value=model_id,
-=======
-                    value=default_repo_id,
->>>>>>> 9f7656798f1b11df5a83b567698c2cc1f0dade99
                     label="Hugging Face Repo",
                     info="Default: openai-community/gpt2")
                 load_model_btn = gr.Button(
@@ -125,7 +113,7 @@ with gr.Blocks(fill_height=True) as demo:
 
             with gr.Group():
                 saved_models = gr.Dropdown(
-                    choices=saved_models_list,
+                    choices=saved_models,
                     max_choices=5, 
                     filterable=True, 
                     label="Saved Models",
@@ -149,30 +137,6 @@ with gr.Blocks(fill_height=True) as demo:
 
     def removeModelCache():
         remove_dir(cache_dir)
-<<<<<<< HEAD
-=======
-        return gr.update(value=default_repo_id), gr.update(choices=[default_repo_id])
-    
-    def updateExecutionProvider(provider):
-        if provider == "cuda":
-            if torch.cuda.is_available():
-                model.cuda()
-                print("Model loaded in cuda", model)
-            else:
-                raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
-
-        else:
-            model.cpu()
-
-    def loadModel(repo_id):
-        global llm_chain, llm
-        if repo_id:
-            model, tokenizer = initialize_model_and_tokenizer(repo_id)
-            llm_chain, llm = init_chain(model, tokenizer)
-            return gr.update(value=repo_id)
-        else:
-            raise gr.Error("Repo can not be empty!")
->>>>>>> 9f7656798f1b11df5a83b567698c2cc1f0dade99
 
     def bot(history):
         print("Question: ", history[-1][0])
@@ -185,17 +149,10 @@ with gr.Blocks(fill_height=True) as demo:
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
     stop.click(None, None, None, cancels=[submit_event], queue=False)
-<<<<<<< HEAD
     load_model_btn.click(load_model, repo_id, repo_id, queue=False, show_progress="full")
     execution_provider.change(fn=update_execution_provider, inputs=execution_provider, queue=False, show_progress="full")
     saved_models.change(load_model, saved_models, repo_id, queue=False, show_progress="full")
     offload_models.click(removeModelCache, None, saved_models, queue=False, show_progress="full")
-=======
-    load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
-    execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
-    saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
-    offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
->>>>>>> 9f7656798f1b11df5a83b567698c2cc1f0dade99
 
 
 demo.queue()
