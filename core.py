@@ -1,6 +1,6 @@
 import os, shutil
 
-default_repo_id = "openai-community/gpt2"
+default_repo_id = "stabilityai/stable-code-instruct-3b"
 default_repo_id_parts = default_repo_id.split("/")
 default_model_folder = f"models--{'--'.join(default_repo_id_parts)}"
 
