@@ -7,7 +7,7 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-from core import list_download_models, remove_dir, default_repo_id, read_config ,update_config
+from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
