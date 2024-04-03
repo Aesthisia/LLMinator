@@ -7,13 +7,23 @@ from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-from core import list_download_models, format_model_name, remove_dir, default_repo_id
+from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
 
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+state, config = read_config()
+if state == None: 
+    config.set('Settings', 'execution_provider', device)
+    config.set('Settings', 'repo_id', default_repo_id)
+
+    update_config(config)
+else:
+    default_repo_id = config.get('Settings', 'repo_id')
+    device = config.get('Settings', 'execution_provider')
+
 
 def initialize_model_and_tokenizer(model_name):
     config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
@@ -117,19 +127,24 @@ with gr.Blocks(fill_height=True) as demo:
     def updateExecutionProvider(provider):
         if provider == "cuda":
             if torch.cuda.is_available():
+                device = "cuda"
                 model.cuda()
                 print("Model loaded in cuda", model)
             else:
                 raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
 
         else:
+            device = "cpu"
             model.cpu()
+
+        update_config(config, execution_provider=provider)
 
     def loadModel(repo_id):
         global llm_chain, llm
         if repo_id:
             model, tokenizer = initialize_model_and_tokenizer(repo_id)
             llm_chain, llm = init_chain(model, tokenizer)
+            update_config(config, repo_id=repo_id)
             return gr.update(value=repo_id)
         else:
             raise gr.Error("Repo can not be empty!")
