@@ -1,4 +1,4 @@
-import os, torch
+import os, torch, argparse
 from threading import Thread
 from typing import Optional
 
@@ -68,6 +68,14 @@ def init_chain(model, tokenizer):
     prompt = PromptTemplate(template=template, input_variables=["question"])
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Optional arguments for --host & --port.') 
+    parser.add_argument('--host', type=str, default='0.0.0.0', help='The host IP to run the server on.')
+    parser.add_argument('--port', type=int, default=7860, help='The port to run the server on.')
+    return parser.parse_args()
+
+args = parse_args()
 
 model, tokenizer = initialize_model_and_tokenizer(default_repo_id)
 
@@ -166,4 +174,4 @@ with gr.Blocks(fill_height=True) as demo:
     offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
 
 demo.queue()
-demo.launch(server_name="0.0.0.0")
+demo.launch(server_name=args.host , server_port=args.port)
