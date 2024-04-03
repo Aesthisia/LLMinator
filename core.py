@@ -33,7 +33,14 @@ def read_config():
         return None, config
     else:
         return config, config
+        # return config
 
-def update_config(config):
+# def update_config(config):
+#     with open(config_path, 'w') as configfile:
+#         config.write(configfile)
+
+def update_config(config, **kwargs):
+    for key, value in kwargs.items():
+        config.set('Settings', key, value)
     with open(config_path, 'w') as configfile:
         config.write(configfile)

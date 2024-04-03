@@ -15,6 +15,7 @@ saved_models_list = list_download_models(cache_dir)
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 state, config = read_config()
+print(state,config)
 if state == None: 
     config.set('Settings', 'execution_provider', device)
     config.set('Settings', 'repo_id', default_repo_id)
@@ -127,12 +128,16 @@ with gr.Blocks(fill_height=True) as demo:
     def updateExecutionProvider(provider):
         if provider == "cuda":
             if torch.cuda.is_available():
+                device = "cuda"
+                update_config(config, execution_provider=device)
                 model.cuda()
                 print("Model loaded in cuda", model)
             else:
                 raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
 
         else:
+            device = "cpu"
+            update_config(config, execution_provider=device)
             model.cpu()
 
     def loadModel(repo_id):
@@ -140,6 +145,7 @@ with gr.Blocks(fill_height=True) as demo:
         if repo_id:
             model, tokenizer = initialize_model_and_tokenizer(repo_id)
             llm_chain, llm = init_chain(model, tokenizer)
+            update_config(config, repo_id=repo_id)
             return gr.update(value=repo_id)
         else:
             raise gr.Error("Repo can not be empty!")
