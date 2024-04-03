@@ -1,0 +1,7 @@
+#chatbot-container {
+  min-height: calc(100vh - 200px);
+}
+
+#title-container {
+  max-height: 50px;
+}

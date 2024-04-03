@@ -80,14 +80,15 @@ args = parse_args()
 
 model, tokenizer = initialize_model_and_tokenizer(default_repo_id)
 
-with gr.Blocks(fill_height=True) as demo:
+with gr.Blocks(css='style.css') as demo:
     with gr.Row():
         with gr.Column(scale=1):
             title = gr.Button(
                 value="LLMinator",
                 scale=1,
                 variant="primary",
-                interactive=True)
+                interactive=True,
+                elem_id="title-container")
             with gr.Group():
                 repo_id = gr.Textbox(
                     value=default_repo_id,
@@ -121,7 +122,7 @@ with gr.Blocks(fill_height=True) as demo:
 
         with gr.Column(scale=4):
             with gr.Group():
-                chatbot = gr.Chatbot(scale=4)
+                chatbot = gr.Chatbot(elem_id="chatbot-container")
                 msg = gr.Textbox(label="Prompt")
                 stop = gr.Button("Stop")
     llm_chain, llm = init_chain(model, tokenizer)
