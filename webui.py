@@ -73,7 +73,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Optional arguments for --host & --port.') 
     parser.add_argument('--host', type=str, default='0.0.0.0', help='The host IP to run the server on.')
     parser.add_argument('--port', type=int, default=7860, help='The port to run the server on.')
-    parser.add_argument('--share', type=bool, default=False, help='To create a public link')
+    parser.add_argument('--share', type=bool, default=False, help='To create a public link.')
     return parser.parse_args()
 
 args = parse_args()
