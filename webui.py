@@ -15,7 +15,6 @@ saved_models_list = list_download_models(cache_dir)
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 state, config = read_config()
-print(state,config)
 if state == None: 
     config.set('Settings', 'execution_provider', device)
     config.set('Settings', 'repo_id', default_repo_id)
@@ -129,7 +128,6 @@ with gr.Blocks(fill_height=True) as demo:
         if provider == "cuda":
             if torch.cuda.is_available():
                 device = "cuda"
-                update_config(config, execution_provider=device)
                 model.cuda()
                 print("Model loaded in cuda", model)
             else:
@@ -137,8 +135,9 @@ with gr.Blocks(fill_height=True) as demo:
 
         else:
             device = "cpu"
-            update_config(config, execution_provider=device)
             model.cpu()
+
+        update_config(config, execution_provider=provider)
 
     def loadModel(repo_id):
         global llm_chain, llm
