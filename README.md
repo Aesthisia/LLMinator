@@ -31,6 +31,7 @@ To use LLMinator, follow these simple steps:
 |----------|----------|----------|
 | --host | 127.0.0.1 | Host or IP address on which the server will listen for incoming connections.|
 | --port| 7860 | Launch gradio with given server port |
+| -- share| False | This generates a public shareable link that you can send to anybody|
 
 ## 🤝 Contributions
 
