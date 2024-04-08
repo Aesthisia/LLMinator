@@ -2,3 +2,4 @@ gradio==4.25.0
 huggingface_hub==0.21.1
 langchain==0.1.14
 torch==2.1.2
+llama_cpp==0.2.60
