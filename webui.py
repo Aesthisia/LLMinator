@@ -5,14 +5,16 @@ from typing import Optional
 import gradio as gr
 from llama_cpp import Llama
 from langchain import PromptTemplate, LLMChain
-from huggingface_hub import hf_hub_download
 from langchain.llms.base import LLM
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
-
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from core import list_download_models, remove_dir, default_repo_id
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
+
+# Callbacks support token-wise streaming
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -20,16 +22,16 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def initialize_model_and_tokenizer(model_path):
-    model = Llama(
+    llm = Llama(
         model_path=model_path,
         n_ctx=6000,
         n_batch=30,
-        temperature=0.9,
-        max_tokens=4095,
+  #      temperature=0.9,
+   #     max_tokens=4095,
         n_parts=1,
-        verbose=0)  # Use downloaded path
-    #model.eval()
-    return model
+        callback_manager=callback_manager, 
+        verbose=True)
+    return llm
 
 def init_chain(model):
     class CustomLLM(LLM):
@@ -42,14 +44,17 @@ def init_chain(model):
             # Removed TextIteratorStreamer and unnecessary inputs
             self.streamer = ""
             print(prompt)
+
             response = model(
-                prompt=prompt
-                #max_tokens=1024,
-                #temperature=0.5,
-                #top_p=0.95,
-                #top_k=100
-            )
-            return response
+                prompt, 
+                max_tokens=1024, 
+                stop=["Q:", "\n"], 
+                echo=False, 
+                temperature=0.5,
+                top_p=0.95,
+                top_k=100)
+
+            return response["choices"][0]["text"]
 
         @property
         def _llm_type(self) -> str:
@@ -63,7 +68,7 @@ def init_chain(model):
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
 
-model = initialize_model_and_tokenizer("./src/quantized_model/bloom-560m.gguf")
+model = initialize_model_and_tokenizer("./src/quantized_model/FP16.gguf")
 
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
@@ -109,12 +114,9 @@ with gr.Blocks(fill_height=True) as demo:
                 chatbot = gr.Chatbot(scale=4)
                 msg = gr.Textbox(label="Prompt")
                 stop = gr.Button("Stop")
+
     llm_chain, llm = init_chain(model)
 
-    #works
-    output = model("Q: Name the planets in the solar system? A: ", max_tokens=32, stop=["Q:", "\n"], echo=True)
-    print("output", output)
-    
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
@@ -145,9 +147,10 @@ with gr.Blocks(fill_height=True) as demo:
 
     def bot(history):
         print("Question: ", history[-1][0])
-        llm_chain.run(question=history[-1][0])
+        output = llm_chain.run(question=history[-1][0])
+        #print("stream:", stream)
         history[-1][1] = ""
-        for character in llm.streamer:
+        for character in output:
             print(character)
             history[-1][1] += character
             yield history
