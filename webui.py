@@ -4,11 +4,17 @@ from typing import Optional
 
 import gradio as gr
 from llama_cpp import Llama
+from src import quantize
 from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from core import list_download_models, remove_dir, default_repo_id
+
+import sys
+
+sys.path.append('./src/llama_cpp/')
+sys.path.append('./src/')
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
@@ -22,6 +28,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def initialize_model_and_tokenizer(model_path):
+    model_path2 = quantize.quantize_model("stabilityai/stable-code-instruct-3b")
     llm = Llama(
         model_path=model_path,
         n_ctx=6000,
@@ -31,6 +38,7 @@ def initialize_model_and_tokenizer(model_path):
         n_parts=1,
         callback_manager=callback_manager, 
         verbose=True)
+
     return llm
 
 def init_chain(model):

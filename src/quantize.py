@@ -1,18 +1,24 @@
-# !git clone https://github.com/ggerganov/llama.cpp
-
-# !cd llama.cpp && LLAMA_CUBLAS=1 make && pip install -r requirements.txt
-
 from huggingface_hub import snapshot_download
+from src.llama_cpp import convert_hf_to_gguf
+import sys
 
-model_name = "bigscience/bloom-560m"
+sys.path.append('./llama_cpp/')
 
-methods = ['q4_k_m']
+def quantize_model(repo_id):
+    base_model = "./src/original_model/"
+    quantized_path = "./quantized_model/"
+    outfile = "./quantized_model/" + repo_id.replace("/", "__") + ".gguf"
 
-base_model = "./original_model/"
-quantized_path = "./quantized_model/"
+    snapshot_download(repo_id=repo_id, local_dir=base_model , local_dir_use_symlinks=False)
+    original_model = quantized_path+'/bloom-560m.gguf'
 
-snapshot_download(repo_id=model_name, local_dir=base_model , local_dir_use_symlinks=False)
-original_model = quantized_path+'/bloom-560m.gguf'
+    args = [original_model, "--outtype", "f16", "--outfile", ]
+    convert_hf_to_gguf.main(args)
+
+    return outfile
+
+
+quantize_model("stabilityai/stable-code-instruct-3b")
 
 # !mkdir ./quantized_model/
 
