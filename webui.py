@@ -3,49 +3,53 @@ from threading import Thread
 from typing import Optional
 
 import gradio as gr
+from llama_cpp import Llama
 from langchain import PromptTemplate, LLMChain
+from huggingface_hub import hf_hub_download
 from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
-from core import list_download_models, format_model_name, remove_dir, default_repo_id
+from core import list_download_models, remove_dir, default_repo_id
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
 
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-def initialize_model_and_tokenizer(model_name):
-    config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
-
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, 
-        config=config, 
-        cache_dir=cache_dir, 
-        torch_dtype=torch.bfloat16, 
-        trust_remote_code=True)
-    
-    model.eval()
-    model.to(device)
+#downloaded_file = hf_hub_download(repo_id=default_repo_id, cache_dir=cache_dir)
 
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    return model, tokenizer
+def initialize_model_and_tokenizer(model_path):
+    model = Llama(
+        model_path=model_path,
+        n_ctx=6000,
+        n_batch=30,
+        temperature=0.9,
+        max_tokens=4095,
+        n_parts=1,
+        verbose=0)  # Use downloaded path
+    #model.eval()
+    return model
 
-def init_chain(model, tokenizer):
+def init_chain(model):
     class CustomLLM(LLM):
 
         """Streamer Object"""
 
-        streamer: Optional[TextIteratorStreamer] = None
+        streamer: Optional[str] = None
 
         def _call(self, prompt, stop=None, run_manager=None) -> str:
-            self.streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, Timeout=5)
-            inputs = tokenizer(prompt, return_tensors="pt").to(model.device) #uncomment for cuda
-            kwargs = dict(input_ids=inputs["input_ids"], streamer=self.streamer, max_new_tokens=1024, temperature=0.5, top_p=0.95, top_k=100, do_sample=True, use_cache=True)
-            thread = Thread(target=model.generate, kwargs=kwargs)
-            thread.start()
-            return ""
+            # Removed TextIteratorStreamer and unnecessary inputs
+            self.streamer = ""
+            print(prompt)
+            response = model(
+                prompt=prompt
+                #max_tokens=1024,
+                #temperature=0.5,
+                #top_p=0.95,
+                #top_k=100
+            )
+            return response
 
         @property
         def _llm_type(self) -> str:
@@ -59,7 +63,7 @@ def init_chain(model, tokenizer):
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
 
-model, tokenizer = initialize_model_and_tokenizer(default_repo_id)
+model = initialize_model_and_tokenizer("./src/quantized_model/bloom-560m.gguf")
 
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
@@ -105,7 +109,12 @@ with gr.Blocks(fill_height=True) as demo:
                 chatbot = gr.Chatbot(scale=4)
                 msg = gr.Textbox(label="Prompt")
                 stop = gr.Button("Stop")
-    llm_chain, llm = init_chain(model, tokenizer)
+    llm_chain, llm = init_chain(model)
+
+    #works
+    output = model("Q: Name the planets in the solar system? A: ", max_tokens=32, stop=["Q:", "\n"], echo=True)
+    print("output", output)
+    
 
     def user(user_message, history):
         return "", history + [[user_message, None]]

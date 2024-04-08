@@ -3,6 +3,9 @@ models/models--*
 models/.locks
 models/tmp*
 
+src/original_model/*
+src/quantized_model/*
+
 
 #compiled files
 *.pyc
