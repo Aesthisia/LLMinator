@@ -33,6 +33,7 @@ install:
 	cd $(LLAMA_DIR) && \
 		$(PIP) install -r $(REQUIREMENTS_FILE)
 	touch $(LLAMA_DIR)/__init__.py
+	cp $(LLAMA_DIR)/convert-hf-to-gguf.py $(LLAMA_DIR)/convert_hf_to_gguf.py
 
 clean:
 	rm -rf $(LLAMA_DIR)

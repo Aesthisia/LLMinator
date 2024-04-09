@@ -28,7 +28,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def initialize_model_and_tokenizer(model_path):
-    model_path2 = quantize.quantize_model("stabilityai/stable-code-instruct-3b")
+    ##model_path2 = quantize.quantize_model("stabilityai/stable-code-instruct-3b")
     llm = Llama(
         model_path=model_path,
         n_ctx=6000,
@@ -51,7 +51,7 @@ def init_chain(model):
         def _call(self, prompt, stop=None, run_manager=None) -> str:
             # Removed TextIteratorStreamer and unnecessary inputs
             self.streamer = ""
-            print(prompt)
+            #print(prompt)
 
             response = model(
                 prompt, 
@@ -62,7 +62,9 @@ def init_chain(model):
                 top_p=0.95,
                 top_k=100)
 
-            return response["choices"][0]["text"]
+            print("response", response)
+            return response
+            #return response["choices"][0]["text"]
 
         @property
         def _llm_type(self) -> str:
@@ -76,7 +78,7 @@ def init_chain(model):
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     return llm_chain, llm
 
-model = initialize_model_and_tokenizer("./src/quantized_model/FP16.gguf")
+model = initialize_model_and_tokenizer("./src/quantized_model/stable-code-3b-q4_k_m.gguf")
 
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
@@ -156,7 +158,7 @@ with gr.Blocks(fill_height=True) as demo:
     def bot(history):
         print("Question: ", history[-1][0])
         output = llm_chain.run(question=history[-1][0])
-        #print("stream:", stream)
+        print("stream:", output)
         history[-1][1] = ""
         for character in output:
             print(character)

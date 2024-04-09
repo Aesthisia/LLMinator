@@ -6,6 +6,8 @@ models/tmp*
 src/original_model/*
 src/quantized_model/*
 
+src/llama_cpp
+
 
 #compiled files
 *.pyc
