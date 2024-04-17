@@ -1,6 +1,8 @@
 import os, shutil
+from configparser import ConfigParser
 
 default_repo_id = "stabilityai/stable-code-instruct-3b"
+config_path = "configs/config.ini"
 default_repo_id_parts = default_repo_id.split("/")
 default_model_folder = f"models--{'--'.join(default_repo_id_parts)}"
 
@@ -23,3 +25,17 @@ def remove_dir(path):
         print("successfully removed cached models!")
     except OSError as e:
         print(f"Error: {e.strerror}")
+
+def read_config():
+    config = ConfigParser()
+    config.read(config_path)
+    if config.get('Settings', 'repo_id') == "" and config.get('Settings', 'execution_provider') == "":
+        return None, config
+    else:
+        return config, config
+
+def update_config(config, **kwargs):
+    for key, value in kwargs.items():
+        config.set('Settings', key, value)
+    with open(config_path, 'w') as configfile:
+        config.write(configfile)

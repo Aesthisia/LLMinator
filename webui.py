@@ -1,4 +1,4 @@
-import os, torch
+import os, torch, argparse
 from threading import Thread
 from typing import Optional
 
@@ -11,8 +11,7 @@ from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
-from core import list_download_models, remove_dir, default_repo_id
-
+from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
 import sys
 
 sys.path.append('./src/llama_cpp/')
@@ -27,6 +26,16 @@ callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 #downloaded_file = hf_hub_download(repo_id=default_repo_id, cache_dir=cache_dir)
+state, config = read_config()
+if state == None: 
+    config.set('Settings', 'execution_provider', device)
+    config.set('Settings', 'repo_id', default_repo_id)
+
+    update_config(config)
+else:
+    default_repo_id = config.get('Settings', 'repo_id')
+    device = config.get('Settings', 'execution_provider')
+
 
 def snapshot_download_and_convert_to_gguf(repo_id):
     print(repo_id)
@@ -52,16 +61,26 @@ def init_llm_chain(model_path):
     llm_chain = prompt | llm
     return llm_chain, llm
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Optional arguments for --host & --port.') 
+    parser.add_argument('--host', type=str, default='0.0.0.0', help='The host IP to run the server on.')
+    parser.add_argument('--port', type=int, default=7860, help='The port to run the server on.')
+    parser.add_argument('--share', type=bool, default=False, help='To create a public link.')
+    return parser.parse_args()
+
+args = parse_args()
+
 snapshot_download_and_convert_to_gguf("stabilityai/stable-code-instruct-3b")
 
-with gr.Blocks(fill_height=True) as demo:
+with gr.Blocks(css='style.css') as demo:
     with gr.Row():
         with gr.Column(scale=1):
             title = gr.Button(
                 value="LLMinator",
                 scale=1,
                 variant="primary",
-                interactive=True)
+                interactive=True,
+                elem_id="title-container")
             with gr.Group():
                 repo_id = gr.Textbox(
                     value=default_repo_id,
@@ -95,7 +114,7 @@ with gr.Blocks(fill_height=True) as demo:
 
         with gr.Column(scale=4):
             with gr.Group():
-                chatbot = gr.Chatbot(scale=4)
+                chatbot = gr.Chatbot(elem_id="chatbot-container")
                 msg = gr.Textbox(label="Prompt")
                 stop = gr.Button("Stop")
 
@@ -112,19 +131,24 @@ with gr.Blocks(fill_height=True) as demo:
     # def updateExecutionProvider(provider):
     #     if provider == "cuda":
     #         if torch.cuda.is_available():
+    #             device = "cuda"
     #             model.cuda()
     #             print("Model loaded in cuda", model)
     #         else:
     #             raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
 
     #     else:
+    #         device = "cpu"
     #         model.cpu()
+
+    #     update_config(config, execution_provider=provider)
 
     # def loadModel(repo_id):
     #     global llm_chain, llm
     #     if repo_id:
     #         model, tokenizer = initialize_model_and_tokenizer(repo_id)
     #         llm_chain, llm = init_chain(model, tokenizer)
+    #         update_config(config, repo_id=repo_id)
     #         return gr.update(value=repo_id)
     #     else:
     #         raise gr.Error("Repo can not be empty!")
@@ -147,4 +171,4 @@ with gr.Blocks(fill_height=True) as demo:
     # offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
 
 demo.queue()
-demo.launch(server_name="0.0.0.0")
+demo.launch(server_name=args.host, server_port=args.port, share=args.share)
