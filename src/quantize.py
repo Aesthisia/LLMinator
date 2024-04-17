@@ -14,7 +14,7 @@ def quantize_model(repo_id):
     original_model = quantized_path+'/bloom-560m.gguf'
 
     command = [
-        'python3', 
+        'python', 
         './src/llama_cpp/convert-hf-to-gguf.py',
         base_model,
         '--outtype', 'f16',
