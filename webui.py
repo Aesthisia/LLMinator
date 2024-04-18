@@ -8,6 +8,7 @@ from langchain.llms.base import LLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
 
 from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
+from models import create_models_ui
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
@@ -81,50 +82,55 @@ args = parse_args()
 model, tokenizer = initialize_model_and_tokenizer(default_repo_id)
 
 with gr.Blocks(css='style.css') as demo:
-    with gr.Row():
-        with gr.Column(scale=1):
-            title = gr.Button(
-                value="LLMinator",
-                scale=1,
-                variant="primary",
-                interactive=True,
-                elem_id="title-container")
-            with gr.Group():
-                repo_id = gr.Textbox(
-                    value=default_repo_id,
-                    label="Hugging Face Repo",
-                    info="Default: openai-community/gpt2")
-                load_model_btn = gr.Button(
-                    value="Load Model",
-                    variant="secondary",
-                    interactive=True,)
-            
-            with gr.Group():
-                execution_provider = gr.Radio(
-                    ["cuda", "cpu"], 
-                    value=device, 
-                    label="Execution providers",
-                    info="Select Device")
-
-            with gr.Group():
-                saved_models = gr.Dropdown(
-                    choices=saved_models_list,
-                    max_choices=5, 
-                    filterable=True, 
-                    label="Saved Models",
-                    info="Models available in the disk"
-                )
-                offload_models = gr.ClearButton(
-                    value="Remove Cached Models",
-                    variant="Secondary",
+    with gr.Tab("Chat"):
+        with gr.Row():
+            with gr.Column(scale=1):
+                title = gr.Button(
+                    value="LLMinator",
+                    scale=1,
+                    variant="primary",
                     interactive=True,
-                )
+                    elem_id="title-container")
+                with gr.Group():
+                    repo_id = gr.Textbox(
+                        value=default_repo_id,
+                        label="Hugging Face Repo",
+                        info="Default: openai-community/gpt2")
+                    load_model_btn = gr.Button(
+                        value="Load Model",
+                        variant="secondary",
+                        interactive=True,)
 
-        with gr.Column(scale=4):
-            with gr.Group():
-                chatbot = gr.Chatbot(elem_id="chatbot-container")
-                msg = gr.Textbox(label="Prompt")
-                stop = gr.Button("Stop")
+                with gr.Group():
+                    execution_provider = gr.Radio(
+                        ["cuda", "cpu"], 
+                        value=device, 
+                        label="Execution providers",
+                        info="Select Device")
+
+                with gr.Group():
+                    saved_models = gr.Dropdown(
+                        choices=saved_models_list,
+                        max_choices=5, 
+                        filterable=True, 
+                        label="Saved Models",
+                        info="Models available in the disk"
+                    )
+                    offload_models = gr.ClearButton(
+                        value="Remove Cached Models",
+                        variant="Secondary",
+                        interactive=True,
+                    )
+
+            with gr.Column(scale=4):
+                with gr.Group():
+                    chatbot = gr.Chatbot(elem_id="chatbot-container")
+                    msg = gr.Textbox(label="Prompt")
+                    stop = gr.Button("Stop")
+
+    with gr.Tab("Models"):
+        create_models_ui()
+
     llm_chain, llm = init_chain(model, tokenizer)
 
     def user(user_message, history):
