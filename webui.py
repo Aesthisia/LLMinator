@@ -25,23 +25,19 @@ callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-#downloaded_file = hf_hub_download(repo_id=default_repo_id, cache_dir=cache_dir)
+
 state, config = read_config()
 if state == None: 
     config.set('Settings', 'execution_provider', device)
     config.set('Settings', 'repo_id', default_repo_id)
-
     update_config(config)
 else:
     default_repo_id = config.get('Settings', 'repo_id')
     device = config.get('Settings', 'execution_provider')
 
-
 def snapshot_download_and_convert_to_gguf(repo_id):
-    print(repo_id)
-    # model_path = quantize.quantize_model("stabilityai/stable-code-instruct-3b")
-    # print(model_path)
-    
+    gguf_model_path = quantize.quantize_model(repo_id)
+    return gguf_model_path
 
 def init_llm_chain(model_path):
     llm = LlamaCpp(
@@ -70,7 +66,7 @@ def parse_args():
 
 args = parse_args()
 
-snapshot_download_and_convert_to_gguf("stabilityai/stable-code-instruct-3b")
+model_path = snapshot_download_and_convert_to_gguf(default_repo_id)
 
 with gr.Blocks(css='style.css') as demo:
     with gr.Row():
@@ -118,7 +114,7 @@ with gr.Blocks(css='style.css') as demo:
                 msg = gr.Textbox(label="Prompt")
                 stop = gr.Button("Stop")
 
-    llm_chain, llm = init_llm_chain("./src/quantized_model\stabilityai__stable-code-instruct-3b.gguf")
+    llm_chain, llm = init_llm_chain(model_path)
 
 
     def user(user_message, history):

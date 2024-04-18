@@ -23,7 +23,7 @@ endif
 # Targets
 .PHONY: all clone install clean
 
-all: clone install
+all: clone install quantized_model_dir:
 
 clone:
 	mkdir -p $(LLAMA_DIR)
@@ -32,8 +32,9 @@ clone:
 install:
 	cd $(LLAMA_DIR) && \
 		$(PIP) install -r $(REQUIREMENTS_FILE)
-	touch $(LLAMA_DIR)/__init__.py
-	cp $(LLAMA_DIR)/convert-hf-to-gguf.py $(LLAMA_DIR)/convert_hf_to_gguf.py
+
+quantized_model_dir::
+	mkdir -p src/quantized_model
 
 clean:
 	rm -rf $(LLAMA_DIR)

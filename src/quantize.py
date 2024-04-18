@@ -1,17 +1,15 @@
-import subprocess
+import subprocess, os
 from huggingface_hub import snapshot_download
-# from src.llama_cpp import convert_hf_to_gguf
-# import sys
-
-#sys.path.append('./llama_cpp/')
 
 def quantize_model(repo_id):
     base_model = "./src/original_model/"
     quantized_path = "./src/quantized_model/"
     outfile = quantized_path + repo_id.replace("/", "__") + ".gguf"
-
+    
+    if os.path.isfile(outfile):
+        return outfile;
+    
     snapshot_download(repo_id=repo_id, local_dir=base_model , local_dir_use_symlinks=True)
-    original_model = quantized_path+'/bloom-560m.gguf'
 
     command = [
         'python', 
@@ -25,10 +23,3 @@ def quantize_model(repo_id):
     subprocess.run(command, check=True)
 
     return outfile
-
-
-#quantize_model("stabilityai/stable-code-instruct-3b")
-
-# !mkdir ./quantized_model/
-
-#

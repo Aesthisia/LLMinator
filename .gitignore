@@ -12,6 +12,5 @@ src/llama_cpp
 #ignore build folder(for cmake)
 build
 
-
 #compiled files
 *.pyc
