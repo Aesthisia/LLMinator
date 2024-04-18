@@ -10,32 +10,24 @@ def create_models_ui():
                         label="Hugging Face Repo",
                         info="Default: openai-community/gpt2",
                         interactive=True)
+                    format_choice = gr.Dropdown(
+                    ["gguf"],
+                    value=["gguf"], 
+                    label="Convert Format",
+                    interactive=True
+                    )
                     load_model_btn = gr.Button(
-                        value="Load Model",
+                        value="Download Snapshot & convert",
                         variant="secondary",
                         interactive=True)
                 with gr.Group():
                     execution_provider = gr.Dropdown(
                     ["a", "b", "c", "d"],
                     value=["a"], 
-                    label="Models loader",
-                    interactive=True
-                )
-            with gr.Column():
-                with gr.Column():
-                    gr.Textbox(
-                    value="a",
-                    label="Model",
-                    info="Default Format: gguf ",
-                    interactive=True,
-                    scale=1)
-                    model_choice = gr.Dropdown(
-                    ["a", "b", "c", "d"],
-                    value=["a"], 
-                    label="Convert",
-                    interactive=True
-                    )
+                    label="Converted Models",
+                    interactive=True)
+
                     load_model_btn = gr.Button(
-                        value="Convert Model",
+                        value="Send to chat",
                         variant="secondary",
                         interactive=True)
