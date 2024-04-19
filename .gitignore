@@ -4,5 +4,13 @@ models/.locks
 models/tmp*
 configs/config.ini
 
+src/original_model/*
+src/quantized_model/*
+
+src/llama_cpp
+
+#ignore build folder(for cmake)
+build
+
 #compiled files
 *.pyc

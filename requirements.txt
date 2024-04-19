@@ -1,4 +1,5 @@
-gradio==4.24.0
+gradio==4.25.0
+huggingface_hub==0.21.1
 langchain==0.1.14
-torch==2.2.1
-transformers==4.39.1
+torch==2.1.2
+llama-cpp-python==0.1.9

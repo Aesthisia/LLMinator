@@ -3,71 +3,59 @@ from threading import Thread
 from typing import Optional
 
 import gradio as gr
+from llama_cpp import Llama
+from src import quantize
 from langchain import PromptTemplate, LLMChain
 from langchain.llms.base import LLM
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer, AutoConfig
-
+from langchain_community.llms import LlamaCpp
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain_core.prompts import PromptTemplate
 from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
 from modelsui import create_models_ui
+import sys
+
+sys.path.append('./src/llama_cpp/')
+sys.path.append('./src/')
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
 
+# Callbacks support token-wise streaming
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+
 #check if cuda is available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 state, config = read_config()
 if state == None: 
     config.set('Settings', 'execution_provider', device)
     config.set('Settings', 'repo_id', default_repo_id)
-
     update_config(config)
 else:
     default_repo_id = config.get('Settings', 'repo_id')
     device = config.get('Settings', 'execution_provider')
 
+def snapshot_download_and_convert_to_gguf(repo_id):
+    gguf_model_path = quantize.quantize_model(repo_id)
+    return gguf_model_path
 
-def initialize_model_and_tokenizer(model_name):
-    config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
-
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, 
-        config=config, 
-        cache_dir=cache_dir, 
-        torch_dtype=torch.bfloat16, 
-        trust_remote_code=True)
+def init_llm_chain(model_path):
+    llm = LlamaCpp(
+        model_path=model_path,
+        n_ctx=6000,
+        n_batch=30,
+        # temperature=0.9,
+        # max_tokens=4095,
+        n_parts=1,
+        callback_manager=callback_manager, 
+        verbose=True)
     
-    model.eval()
-    model.to(device)
-
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    return model, tokenizer
-
-def init_chain(model, tokenizer):
-    class CustomLLM(LLM):
-
-        """Streamer Object"""
-
-        streamer: Optional[TextIteratorStreamer] = None
-
-        def _call(self, prompt, stop=None, run_manager=None) -> str:
-            self.streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, Timeout=5)
-            inputs = tokenizer(prompt, return_tensors="pt").to(model.device) #uncomment for cuda
-            kwargs = dict(input_ids=inputs["input_ids"], streamer=self.streamer, max_new_tokens=1024, temperature=0.5, top_p=0.95, top_k=100, do_sample=True, use_cache=True)
-            thread = Thread(target=model.generate, kwargs=kwargs)
-            thread.start()
-            return ""
-
-        @property
-        def _llm_type(self) -> str:
-            return "custom"
-
-    llm = CustomLLM()
-
     template = """Question: {question}
-    Answer: Let's think step by step."""
-    prompt = PromptTemplate(template=template, input_variables=["question"])
-    llm_chain = LLMChain(prompt=prompt, llm=llm)
+        Answer: Let's work this out in a step by step way to be sure we have the right answer."""
+
+    prompt = PromptTemplate.from_template(template)
+    llm_chain = prompt | llm
     return llm_chain, llm
 
 def parse_args():
@@ -79,7 +67,7 @@ def parse_args():
 
 args = parse_args()
 
-model, tokenizer = initialize_model_and_tokenizer(default_repo_id)
+model_path = snapshot_download_and_convert_to_gguf(default_repo_id)
 
 with gr.Blocks(css='style.css') as demo:
     with gr.Tab("Chat"):
@@ -131,55 +119,56 @@ with gr.Blocks(css='style.css') as demo:
     with gr.Tab("Models"):
         create_models_ui()
 
-    llm_chain, llm = init_chain(model, tokenizer)
+    llm_chain, llm = init_llm_chain(model_path)
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
 
-    def removeModelCache():
-        remove_dir(cache_dir)
-        return gr.update(value=default_repo_id), gr.update(choices=[default_repo_id])
+    # def removeModelCache():
+    #     remove_dir(cache_dir)
+    #     return gr.update(value=default_repo_id), gr.update(choices=[default_repo_id])
     
-    def updateExecutionProvider(provider):
-        if provider == "cuda":
-            if torch.cuda.is_available():
-                device = "cuda"
-                model.cuda()
-                print("Model loaded in cuda", model)
-            else:
-                raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
+    # def updateExecutionProvider(provider):
+    #     if provider == "cuda":
+    #         if torch.cuda.is_available():
+    #             device = "cuda"
+    #             model.cuda()
+    #             print("Model loaded in cuda", model)
+    #         else:
+    #             raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
 
-        else:
-            device = "cpu"
-            model.cpu()
+    #     else:
+    #         device = "cpu"
+    #         model.cpu()
 
-        update_config(config, execution_provider=provider)
+    #     update_config(config, execution_provider=provider)
 
-    def loadModel(repo_id):
-        global llm_chain, llm
-        if repo_id:
-            model, tokenizer = initialize_model_and_tokenizer(repo_id)
-            llm_chain, llm = init_chain(model, tokenizer)
-            update_config(config, repo_id=repo_id)
-            return gr.update(value=repo_id)
-        else:
-            raise gr.Error("Repo can not be empty!")
+    # def loadModel(repo_id):
+    #     global llm_chain, llm
+    #     if repo_id:
+    #         model, tokenizer = initialize_model_and_tokenizer(repo_id)
+    #         llm_chain, llm = init_chain(model, tokenizer)
+    #         update_config(config, repo_id=repo_id)
+    #         return gr.update(value=repo_id)
+    #     else:
+    #         raise gr.Error("Repo can not be empty!")
 
     def bot(history):
         print("Question: ", history[-1][0])
-        llm_chain.run(question=history[-1][0])
+        output = llm_chain.invoke({"question": history[-1][0]})
+        print("stream:", output)
         history[-1][1] = ""
-        for character in llm.streamer:
+        for character in output:
             print(character)
             history[-1][1] += character
             yield history
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
-    stop.click(None, None, None, cancels=[submit_event], queue=False)
-    load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
-    execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
-    saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
-    offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
+    # stop.click(None, None, None, cancels=[submit_event], queue=False)
+    # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
+    # execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
+    # saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
+    # offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
 
 demo.queue()
 demo.launch(server_name=args.host, server_port=args.port, share=args.share)
