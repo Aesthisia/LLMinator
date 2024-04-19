@@ -12,6 +12,7 @@ from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
 from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
+from modelsui import create_models_ui
 import sys
 
 sys.path.append('./src/llama_cpp/')
@@ -69,53 +70,56 @@ args = parse_args()
 model_path = snapshot_download_and_convert_to_gguf(default_repo_id)
 
 with gr.Blocks(css='style.css') as demo:
-    with gr.Row():
-        with gr.Column(scale=1):
-            title = gr.Button(
-                value="LLMinator",
-                scale=1,
-                variant="primary",
-                interactive=True,
-                elem_id="title-container")
-            with gr.Group():
-                repo_id = gr.Textbox(
-                    value=default_repo_id,
-                    label="Hugging Face Repo",
-                    info="Default: openai-community/gpt2")
-                load_model_btn = gr.Button(
-                    value="Load Model",
-                    variant="secondary",
-                    interactive=True,)
-            
-            with gr.Group():
-                execution_provider = gr.Radio(
-                    ["cuda", "cpu"], 
-                    value=device, 
-                    label="Execution providers",
-                    info="Select Device")
-
-            with gr.Group():
-                saved_models = gr.Dropdown(
-                    choices=saved_models_list,
-                    max_choices=5, 
-                    filterable=True, 
-                    label="Saved Models",
-                    info="Models available in the disk"
-                )
-                offload_models = gr.ClearButton(
-                    value="Remove Cached Models",
-                    variant="Secondary",
+    with gr.Tab("Chat"):
+        with gr.Row():
+            with gr.Column(scale=1):
+                title = gr.Button(
+                    value="LLMinator",
+                    scale=1,
+                    variant="primary",
                     interactive=True,
-                )
+                    elem_id="title-container")
+                with gr.Group():
+                    repo_id = gr.Textbox(
+                        value=default_repo_id,
+                        label="Hugging Face Repo",
+                        info="Default: openai-community/gpt2")
+                    load_model_btn = gr.Button(
+                        value="Load Model",
+                        variant="secondary",
+                        interactive=True,)
 
-        with gr.Column(scale=4):
-            with gr.Group():
-                chatbot = gr.Chatbot(elem_id="chatbot-container")
-                msg = gr.Textbox(label="Prompt")
-                stop = gr.Button("Stop")
+                with gr.Group():
+                    execution_provider = gr.Radio(
+                        ["cuda", "cpu"], 
+                        value=device, 
+                        label="Execution providers",
+                        info="Select Device")
+
+                with gr.Group():
+                    saved_models = gr.Dropdown(
+                        choices=saved_models_list,
+                        max_choices=5, 
+                        filterable=True, 
+                        label="Saved Models",
+                        info="Models available in the disk"
+                    )
+                    offload_models = gr.ClearButton(
+                        value="Remove Cached Models",
+                        variant="Secondary",
+                        interactive=True,
+                    )
+
+            with gr.Column(scale=4):
+                with gr.Group():
+                    chatbot = gr.Chatbot(elem_id="chatbot-container")
+                    msg = gr.Textbox(label="Prompt")
+                    stop = gr.Button("Stop")
+
+    with gr.Tab("Models"):
+        create_models_ui()
 
     llm_chain, llm = init_llm_chain(model_path)
-
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
