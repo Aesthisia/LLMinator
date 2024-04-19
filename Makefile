@@ -9,7 +9,7 @@ LLAMA_DIR := src/llama_cpp
 PIP := $(shell command -v pip3 2>/dev/null || command -v pip)
 
 # Check if python and git are installed
-PYTHON := $(shell command -v python3 2>/dev/null || command -v python)
+PYTHON := $(shell command -v python 2>/dev/null || command -v python3 2>/dev/null)
 GIT := $(shell command -v git)
 
 ifeq ($(PYTHON),)

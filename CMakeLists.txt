@@ -34,3 +34,9 @@ execute_process(
 )
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/src/quantized_model")
+
+find_program(PYTHON NAMES python python3 2>/dev/null)
+
+if(PYTHON)
+  file(APPEND "${PROJECT_SOURCE_DIR}/configs/config.ini" "py_cmd = ${PYTHON}")
+endif()
