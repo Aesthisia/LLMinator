@@ -164,7 +164,6 @@ with gr.Blocks(css='style.css') as demo:
         return "", history + [[user_message, None]]
 
     def downloadConvertModel(model_repo_id):
-        global llm_chain, llm
         if model_repo_id:
             snapshot_download_and_convert_to_gguf(model_repo_id)
             return gr.update(value=""), gr.update(choices=list_converted_gguf_models(cache_gguf_dir))

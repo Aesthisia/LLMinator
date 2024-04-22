@@ -29,7 +29,7 @@ def quantize_model(repo_id):
     snapshot_download(repo_id=repo_id, local_dir=model_path , local_dir_use_symlinks=True)
 
     command = [
-        get_py_cmd(), 
+        get_py_cmd(),
         './src/llama_cpp/convert-hf-to-gguf.py',
         model_path,
         '--outtype', 'f16',
