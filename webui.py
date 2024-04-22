@@ -11,8 +11,7 @@ from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
-from core import list_download_models, remove_dir, default_repo_id, read_config, update_config
-from modelsui import create_models_ui
+from core import list_download_models, list_converted_gguf_models, remove_dir, default_repo_id, read_config, update_config
 import sys
 
 sys.path.append('./src/llama_cpp/')
@@ -20,6 +19,9 @@ sys.path.append('./src/')
 
 cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
+
+cache_gguf_dir = os.path.join(os.getcwd(), "src/quantized_model")
+saved_gguf_models_list = list_converted_gguf_models(cache_gguf_dir)
 
 # Callbacks support token-wise streaming
 callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
@@ -70,88 +72,110 @@ args = parse_args()
 model_path = snapshot_download_and_convert_to_gguf(default_repo_id)
 
 with gr.Blocks(css='style.css') as demo:
-    with gr.Tab("Chat"):
-        with gr.Row():
-            with gr.Column(scale=1):
-                title = gr.Button(
-                    value="LLMinator",
-                    scale=1,
-                    variant="primary",
-                    interactive=True,
-                    elem_id="title-container")
-                with gr.Group():
-                    repo_id = gr.Textbox(
-                        value=default_repo_id,
-                        label="Hugging Face Repo",
-                        info="Default: openai-community/gpt2")
-                    load_model_btn = gr.Button(
-                        value="Load Model",
-                        variant="secondary",
-                        interactive=True,)
-
-                with gr.Group():
-                    execution_provider = gr.Radio(
-                        ["cuda", "cpu"], 
-                        value=device, 
-                        label="Execution providers",
-                        info="Select Device")
-
-                with gr.Group():
-                    saved_models = gr.Dropdown(
-                        choices=saved_models_list,
-                        max_choices=5, 
-                        filterable=True, 
-                        label="Saved Models",
-                        info="Models available in the disk"
-                    )
-                    offload_models = gr.ClearButton(
-                        value="Remove Cached Models",
-                        variant="Secondary",
+    with gr.Tabs(selected="chat") as tabs:
+        with gr.Tab("Chat", id="chat"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    title = gr.Button(
+                        value="LLMinator",
+                        scale=1,
+                        variant="primary",
                         interactive=True,
+                        elem_id="title-container"
                     )
+                    with gr.Group():
+                        repo_id = gr.Textbox(
+                            value=default_repo_id,
+                            label="Hugging Face Repo",
+                            info="Default: openai-community/gpt2"
+                        )
+                        load_model_btn = gr.Button(
+                            value="Load Model",
+                            variant="secondary",
+                            interactive=True
+                        )
+                    with gr.Group():
+                        execution_provider = gr.Radio(
+                            ["cuda", "cpu"], 
+                            value=device, 
+                            label="Execution providers",
+                            info="Select Device"
+                        )
+                    with gr.Group():
+                        saved_models = gr.Dropdown(
+                            choices=saved_models_list,
+                            max_choices=5, 
+                            filterable=True, 
+                            label="Saved Models",
+                            info="Models available in the disk"
+                        )
+                        offload_models = gr.ClearButton(
+                            value="Remove Cached Models",
+                            variant="Secondary",
+                            interactive=True,
+                        )
 
-            with gr.Column(scale=4):
-                with gr.Group():
-                    chatbot = gr.Chatbot(elem_id="chatbot-container")
-                    msg = gr.Textbox(label="Prompt")
-                    stop = gr.Button("Stop")
+                with gr.Column(scale=4):
+                    with gr.Group():
+                        chatbot = gr.Chatbot(elem_id="chatbot-container")
+                        msg = gr.Textbox(label="Prompt")
+                        stop = gr.Button("Stop")
 
-    with gr.Tab("Models"):
-        create_models_ui()
+        with gr.Tab("Models", id="models"):
+            with gr.Row():
+                with gr.Column():
+                    with gr.Group():
+                        model_repo_id = gr.Textbox(
+                            value="",
+                            label="Hugging Face Repo",
+                            info="Default: stabilityai/stable-code-instruct-3b",
+                            interactive=True
+                        )
+                        format_choice = gr.Dropdown(
+                            ["gguf"],
+                            value=["gguf"], 
+                            label="Convert Format",
+                            interactive=True
+                        )
+                        download_convert_btn = gr.Button(
+                            value="Download Snapshot & Convert",
+                            variant="secondary",
+                            interactive=True
+                        )
+
+                    with gr.Group():
+                        converted_models = gr.Dropdown(
+                            choices=saved_gguf_models_list,
+                            max_choices=5, 
+                            filterable=True, 
+                            info="gguf models available in the disk",
+                            label="Converted Models",
+                            interactive=True
+                        )
+                        send_to_chat_btn = gr.Button(
+                            value="Send to Chat",
+                            variant="secondary",
+                            interactive=True
+                        )
 
     llm_chain, llm = init_llm_chain(model_path)
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
 
-    # def removeModelCache():
-    #     remove_dir(cache_dir)
-    #     return gr.update(value=default_repo_id), gr.update(choices=[default_repo_id])
-    
-    # def updateExecutionProvider(provider):
-    #     if provider == "cuda":
-    #         if torch.cuda.is_available():
-    #             device = "cuda"
-    #             model.cuda()
-    #             print("Model loaded in cuda", model)
-    #         else:
-    #             raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
+    def downloadConvertModel(model_repo_id):
+        if model_repo_id:
+            snapshot_download_and_convert_to_gguf(model_repo_id)
+            return gr.update(value=""), gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
+        else:
+            raise gr.Error("Repo can not be empty!")
 
-    #     else:
-    #         device = "cpu"
-    #         model.cpu()
-
-    #     update_config(config, execution_provider=provider)
-
-    # def loadModel(repo_id):
-    #     global llm_chain, llm
-    #     if repo_id:
-    #         model, tokenizer = initialize_model_and_tokenizer(repo_id)
-    #         llm_chain, llm = init_chain(model, tokenizer)
-    #         update_config(config, repo_id=repo_id)
-    #         return gr.update(value=repo_id)
-    #     else:
-    #         raise gr.Error("Repo can not be empty!")
+    def loadModelFromModelsTab(model_repo_id):
+        global llm_chain, llm
+        model_path = snapshot_download_and_convert_to_gguf(model_repo_id)
+        llm_chain, llm = init_llm_chain(model_path)
+        update_config(config, repo_id=model_repo_id)
+        return gr.update(value=model_repo_id), gr.Tabs(selected="chat")
 
     def bot(history):
         print("Question: ", history[-1][0])
@@ -164,6 +188,8 @@ with gr.Blocks(css='style.css') as demo:
             yield history
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
+    download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models], queue=False, show_progress="full")
+    send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [repo_id, tabs], queue=False, show_progress="full")
     # stop.click(None, None, None, cancels=[submit_event], queue=False)
     # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
     # execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
