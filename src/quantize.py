@@ -14,24 +14,28 @@ def get_py_cmd():
         return 'python'
 
 def quantize_model(repo_id):
-    base_model = "./src/original_model/"
+    original_models_path = "./src/original_model/"
     quantized_path = "./src/quantized_model/"
+
+    repo_id_parts = repo_id.split("/")
+    model_folder = f"model--{'--'.join(repo_id_parts)}"
+    model_path = original_models_path + model_folder
+
     outfile = quantized_path + repo_id.replace("/", "__") + ".gguf"
     
     if os.path.isfile(outfile):
         return outfile
     
-    snapshot_download(repo_id=repo_id, local_dir=base_model , local_dir_use_symlinks=True)
+    snapshot_download(repo_id=repo_id, local_dir=model_path , local_dir_use_symlinks=True)
 
     command = [
-        get_py_cmd(),
+        get_py_cmd(), 
         './src/llama_cpp/convert-hf-to-gguf.py',
-        base_model,
+        model_path,
         '--outtype', 'f16',
         '--outfile', outfile
     ]
 
-    # Run the command
     subprocess.run(command, check=True)
 
     return outfile

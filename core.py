@@ -10,10 +10,19 @@ def format_model_name(directory_name):
     parts = directory_name.split("--")
     return "/".join(parts[1:])
 
+def format_gguf_model_name(file_name):
+    parts = file_name.replace('.gguf', '').split("__")
+    return "/".join(parts)
+
 def list_download_models(cache_dir):
     contents = os.listdir(cache_dir)
     directories = [format_model_name(item) for item in contents if os.path.isdir(os.path.join(cache_dir, item)) and item.startswith("models")]
     return directories
+
+def list_converted_gguf_models(cache_gguf_dir):
+    contents = os.listdir(cache_gguf_dir)
+    model_files = [format_gguf_model_name(item) for item in contents]
+    return model_files
 
 def remove_dir(path):
     try:
