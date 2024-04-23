@@ -1,4 +1,4 @@
-import os, torch, argparse
+import os, torch, argparse, shutil
 from threading import Thread
 from typing import Optional
 
@@ -21,6 +21,7 @@ cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
 
 cache_gguf_dir = os.path.join(os.getcwd(), "src/quantized_model")
+cache_original_dir = os.path.join(os.getcwd(), "src/original_model")
 saved_gguf_models_list = list_converted_gguf_models(cache_gguf_dir)
 
 # Callbacks support token-wise streaming
@@ -142,23 +143,52 @@ with gr.Blocks(css='style.css') as demo:
                             variant="secondary",
                             interactive=True
                         )
+                    with gr.Row():
+                        with gr.Group():
+                            converted_models = gr.Dropdown(
+                                choices=saved_gguf_models_list,
+                                max_choices=5, 
+                                filterable=True, 
+                                info="gguf models available in the disk",
+                                label="Converted Models",
+                                interactive=True
+                            )
+                            send_to_chat_btn = gr.Button(
+                                value="Send to Chat",
+                                variant="secondary",
+                                interactive=True
+                            )
 
-                    with gr.Group():
-                        converted_models = gr.Dropdown(
-                            choices=saved_gguf_models_list,
-                            max_choices=5, 
-                            filterable=True, 
-                            info="gguf models available in the disk",
-                            label="Converted Models",
-                            interactive=True
-                        )
-                        send_to_chat_btn = gr.Button(
-                            value="Send to Chat",
-                            variant="secondary",
-                            interactive=True
-                        )
+                        with gr.Group():
+                            saved_gguf_models = gr.Dropdown(
+                                choices=saved_gguf_models_list,
+                                max_choices=5,
+                                filterable=True,
+                                info="gguf models available in the disk",
+                                label="Remove Models",
+                                interactive=True
+                            )
+                            remove_model_btn = gr.Button(
+                                value="Remove Model",
+                                variant="danger",
+                                interactive=True
+                            )
 
     llm_chain, llm = init_llm_chain(model_path)
+
+    def removeModelFromCache(model_name):
+        if model_name == "stabilityai/stable-code-instruct-3b":
+            raise gr.Error("Can not delete default model")
+        else:
+            gguf_model_name = model_name.replace("/", "__") + ".gguf"
+            original_model_parts = model_name.split("/")
+            original_model_name = f"model--{'--'.join(original_model_parts)}"
+            try:
+                os.remove(os.path.join(cache_gguf_dir, gguf_model_name))
+                shutil.rmtree(os.path.join(cache_original_dir, original_model_name))
+                return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
+            except FileNotFoundError:
+                raise gr.Error("Model not found in cache.")
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
@@ -191,6 +221,7 @@ with gr.Blocks(css='style.css') as demo:
     download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models], queue=False, show_progress="full")
     send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [repo_id, tabs], queue=False, show_progress="full")
     # stop.click(None, None, None, cancels=[submit_event], queue=False)
+    remove_model_btn.click(removeModelFromCache, saved_gguf_models, saved_gguf_models, queue=False, show_progress="full")
     # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
     # execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
     # saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
