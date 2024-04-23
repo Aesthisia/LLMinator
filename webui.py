@@ -11,7 +11,7 @@ from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
-from core import list_download_models, list_converted_gguf_models, remove_dir, default_repo_id, read_config, update_config
+from core import list_download_models, list_converted_gguf_models, default_repo_id, read_config, update_config,removeModelFromCache
 import sys
 
 sys.path.append('./src/llama_cpp/')
@@ -176,19 +176,23 @@ with gr.Blocks(css='style.css') as demo:
 
     llm_chain, llm = init_llm_chain(model_path)
 
-    def removeModelFromCache(model_name):
-        if model_name == "stabilityai/stable-code-instruct-3b":
-            raise gr.Error("Can not delete default model")
-        else:
-            gguf_model_name = model_name.replace("/", "__") + ".gguf"
-            original_model_parts = model_name.split("/")
-            original_model_name = f"model--{'--'.join(original_model_parts)}"
-            try:
-                os.remove(os.path.join(cache_gguf_dir, gguf_model_name))
-                shutil.rmtree(os.path.join(cache_original_dir, original_model_name))
-                return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
-            except FileNotFoundError:
-                raise gr.Error("Model not found in cache.")
+    # def removeModelFromCache(model_name):
+    #     if model_name == "stabilityai/stable-code-instruct-3b":
+    #         raise gr.Error("Can not delete default model")
+    #     else:
+    #         gguf_model_name = model_name.replace("/", "__") + ".gguf"
+    #         original_model_parts = model_name.split("/")
+    #         original_model_name = f"model--{'--'.join(original_model_parts)}"
+    #         try:
+    #             os.remove(os.path.join(cache_gguf_dir, gguf_model_name))
+    #             shutil.rmtree(os.path.join(cache_original_dir, original_model_name))
+    #             return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
+    #         except FileNotFoundError:
+    #             raise gr.Error("Model not found in cache.")
+
+    def removeModel(model_name):
+        removeModelFromCache(model_name)
+        return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
@@ -221,7 +225,7 @@ with gr.Blocks(css='style.css') as demo:
     download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models], queue=False, show_progress="full")
     send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [repo_id, tabs], queue=False, show_progress="full")
     # stop.click(None, None, None, cancels=[submit_event], queue=False)
-    remove_model_btn.click(removeModelFromCache, saved_gguf_models, saved_gguf_models, queue=False, show_progress="full")
+    remove_model_btn.click(removeModel, saved_gguf_models, saved_gguf_models, queue=False, show_progress="full")
     # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
     # execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
     # saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
