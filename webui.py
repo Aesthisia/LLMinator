@@ -1,4 +1,4 @@
-import os, torch, argparse, shutil
+import os, torch, argparse
 from threading import Thread
 from typing import Optional
 
@@ -11,7 +11,7 @@ from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
-from core import list_download_models, list_converted_gguf_models, default_repo_id, read_config, update_config,removeModelFromCache
+from core import list_download_models, list_converted_gguf_models, default_repo_id, read_config, update_config, removeModelFromCache
 import sys
 
 sys.path.append('./src/llama_cpp/')
@@ -21,7 +21,6 @@ cache_dir = os.path.join(os.getcwd(), "models")
 saved_models_list = list_download_models(cache_dir)
 
 cache_gguf_dir = os.path.join(os.getcwd(), "src/quantized_model")
-cache_original_dir = os.path.join(os.getcwd(), "src/original_model")
 saved_gguf_models_list = list_converted_gguf_models(cache_gguf_dir)
 
 # Callbacks support token-wise streaming
@@ -175,20 +174,6 @@ with gr.Blocks(css='style.css') as demo:
                             )
 
     llm_chain, llm = init_llm_chain(model_path)
-
-    # def removeModelFromCache(model_name):
-    #     if model_name == "stabilityai/stable-code-instruct-3b":
-    #         raise gr.Error("Can not delete default model")
-    #     else:
-    #         gguf_model_name = model_name.replace("/", "__") + ".gguf"
-    #         original_model_parts = model_name.split("/")
-    #         original_model_name = f"model--{'--'.join(original_model_parts)}"
-    #         try:
-    #             os.remove(os.path.join(cache_gguf_dir, gguf_model_name))
-    #             shutil.rmtree(os.path.join(cache_original_dir, original_model_name))
-    #             return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
-    #         except FileNotFoundError:
-    #             raise gr.Error("Model not found in cache.")
 
     def removeModel(model_name):
         removeModelFromCache(model_name)
