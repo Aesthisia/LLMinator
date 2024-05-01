@@ -43,15 +43,22 @@ def snapshot_download_and_convert_to_gguf(repo_id):
     return gguf_model_path
 
 def init_llm_chain(model_path):
+    if device == "cuda":
+        n_gpu_layers = -1
+    else:
+        n_gpu_layers = 0
+
     llm = LlamaCpp(
         model_path=model_path,
+        n_gpu_layers=n_gpu_layers,
         n_ctx=6000,
         n_batch=30,
         # temperature=0.9,
         # max_tokens=4095,
         n_parts=1,
         callback_manager=callback_manager, 
-        verbose=True)
+        verbose=True
+    )
     
     template = """Question: {question}
         Answer: Let's work this out in a step by step way to be sure we have the right answer."""
@@ -173,6 +180,21 @@ with gr.Blocks(css='style.css') as demo:
 
     llm_chain, llm = init_llm_chain(model_path)
 
+    def updateExecutionProvider(provider, gguf_model):
+        global device
+        if provider == "cuda":
+            if torch.cuda.is_available():
+                device = "cuda"
+            else:
+                raise gr.Error("Torch not compiled with CUDA enabled. Please make sure cuda is installed.")
+
+        else:
+            device = "cpu"
+
+        update_config(config, execution_provider=provider)
+        loadModel(gguf_model)
+        return gr.update(value=device)
+
     def removeModel(model_name):
         removeModelFromCache(model_name)
         return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
@@ -218,7 +240,7 @@ with gr.Blocks(css='style.css') as demo:
     # stop.click(None, None, None, cancels=[submit_event], queue=False)
     remove_model_btn.click(removeModel, saved_gguf_models, saved_gguf_models, queue=False, show_progress="full")
     # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
-    # execution_provider.change(fn=updateExecutionProvider, inputs=execution_provider, queue=False, show_progress="full")
+    execution_provider.change(updateExecutionProvider, [execution_provider, converted_models_chat], execution_provider, queue=False, show_progress="full")
     # saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
     # offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
 
