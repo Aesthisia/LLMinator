@@ -83,17 +83,14 @@ with gr.Blocks(css='style.css') as demo:
                         interactive=True,
                         elem_id="title-container"
                     )
-                    with gr.Group():
-                        repo_id = gr.Textbox(
-                            value=default_repo_id,
-                            label="Hugging Face Repo",
-                            info="Default: openai-community/gpt2"
-                        )
-                        load_model_btn = gr.Button(
-                            value="Load Model",
-                            variant="secondary",
-                            interactive=True
-                        )
+                    converted_models_chat = gr.Dropdown(
+                        choices=saved_gguf_models_list,
+                        value=default_repo_id,
+                        max_choices=5,
+                        filterable=True,
+                        info="Default: stabilityai/stable-code-instruct-3b",
+                        label="Selected Model",
+                    )
                     with gr.Group():
                         execution_provider = gr.Radio(
                             ["cuda", "cpu"], 
@@ -132,8 +129,8 @@ with gr.Blocks(css='style.css') as demo:
                             interactive=True
                         )
                         format_choice = gr.Dropdown(
-                            ["gguf"],
-                            value=["gguf"], 
+                            choices=["gguf"],
+                            value="gguf",
                             label="Convert Format",
                             interactive=True
                         )
@@ -146,8 +143,9 @@ with gr.Blocks(css='style.css') as demo:
                         with gr.Group():
                             converted_models = gr.Dropdown(
                                 choices=saved_gguf_models_list,
-                                max_choices=5, 
-                                filterable=True, 
+                                value=default_repo_id,
+                                max_choices=5,
+                                filterable=True,
                                 info="gguf models available in the disk",
                                 label="Converted Models",
                                 interactive=True
@@ -188,14 +186,21 @@ with gr.Blocks(css='style.css') as demo:
             return gr.update(value=""), gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
         else:
             raise gr.Error("Repo can not be empty!")
+        
+    def loadModel(repo_id):
+        global llm_chain, llm
+        model_path = snapshot_download_and_convert_to_gguf(repo_id)
+        llm_chain, llm = init_llm_chain(model_path)
+        update_config(config, repo_id=repo_id)
 
     def loadModelFromModelsTab(model_repo_id):
-        global llm_chain, llm
-        model_path = snapshot_download_and_convert_to_gguf(model_repo_id)
-        llm_chain, llm = init_llm_chain(model_path)
-        update_config(config, repo_id=model_repo_id)
+        loadModel(model_repo_id)
         return gr.update(value=model_repo_id), gr.Tabs(selected="chat")
-
+    
+    def loadModelFromChatTab(repo_id):
+        loadModel(repo_id)
+        return gr.update(value=repo_id)
+    
     def bot(history):
         print("Question: ", history[-1][0])
         output = llm_chain.invoke({"question": history[-1][0]})
@@ -208,7 +213,8 @@ with gr.Blocks(css='style.css') as demo:
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
     download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models], queue=False, show_progress="full")
-    send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [repo_id, tabs], queue=False, show_progress="full")
+    send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [converted_models_chat, tabs], queue=False, show_progress="full")
+    converted_models_chat.change(loadModelFromChatTab, converted_models_chat, converted_models_chat, queue=False, show_progress="full")
     # stop.click(None, None, None, cancels=[submit_event], queue=False)
     remove_model_btn.click(removeModel, saved_gguf_models, saved_gguf_models, queue=False, show_progress="full")
     # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
