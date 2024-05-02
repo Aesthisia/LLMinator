@@ -1,24 +1,16 @@
 import os, torch, argparse
-from threading import Thread
-from typing import Optional
-
 import gradio as gr
-from llama_cpp import Llama
 from src import quantize
-from langchain import PromptTemplate, LLMChain
-from langchain.llms.base import LLM
+from langchain import PromptTemplate
 from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
-from core import list_download_models, list_converted_gguf_models, default_repo_id, read_config, update_config, removeModelFromCache
+from core import list_converted_gguf_models, default_repo_id, read_config, update_config, removeModelFromCache
 import sys
 
 sys.path.append('./src/llama_cpp/')
 sys.path.append('./src/')
-
-cache_dir = os.path.join(os.getcwd(), "models")
-saved_models_list = list_download_models(cache_dir)
 
 cache_gguf_dir = os.path.join(os.getcwd(), "src/quantized_model")
 saved_gguf_models_list = list_converted_gguf_models(cache_gguf_dir)
@@ -105,19 +97,6 @@ with gr.Blocks(css='style.css') as demo:
                             label="Execution providers",
                             info="Select Device"
                         )
-                    with gr.Group():
-                        saved_models = gr.Dropdown(
-                            choices=saved_models_list,
-                            max_choices=5, 
-                            filterable=True, 
-                            label="Saved Models",
-                            info="Models available in the disk"
-                        )
-                        offload_models = gr.ClearButton(
-                            value="Remove Cached Models",
-                            variant="Secondary",
-                            interactive=True,
-                        )
 
                 with gr.Column(scale=4):
                     with gr.Group():
@@ -197,7 +176,7 @@ with gr.Blocks(css='style.css') as demo:
 
     def removeModel(model_name):
         removeModelFromCache(model_name)
-        return gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
+        return gr.update(choices=list_converted_gguf_models(cache_gguf_dir)), gr.update(choices=list_converted_gguf_models(cache_gguf_dir)), gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
 
     def user(user_message, history):
         return "", history + [[user_message, None]]
@@ -234,15 +213,12 @@ with gr.Blocks(css='style.css') as demo:
             yield history
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
+    # stop.click(None, None, None, cancels=[submit_event], queue=False)
     download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models], queue=False, show_progress="full")
     send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [converted_models_chat, tabs], queue=False, show_progress="full")
     converted_models_chat.change(loadModelFromChatTab, converted_models_chat, converted_models_chat, queue=False, show_progress="full")
-    # stop.click(None, None, None, cancels=[submit_event], queue=False)
-    remove_model_btn.click(removeModel, saved_gguf_models, saved_gguf_models, queue=False, show_progress="full")
-    # load_model_btn.click(loadModel, repo_id, repo_id, queue=False, show_progress="full")
+    remove_model_btn.click(removeModel, saved_gguf_models, [saved_gguf_models, converted_models_chat, converted_models], queue=False, show_progress="full")
     execution_provider.change(updateExecutionProvider, [execution_provider, converted_models_chat], execution_provider, queue=False, show_progress="full")
-    # saved_models.change(loadModel, saved_models, repo_id, queue=False, show_progress="full")
-    # offload_models.click(removeModelCache, None, [repo_id, saved_models], queue=False, show_progress="full")
 
 demo.queue()
 demo.launch(server_name=args.host, server_port=args.port, share=args.share)
