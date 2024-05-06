@@ -13,7 +13,6 @@ sys.path.append('./src/llama_cpp/')
 sys.path.append('./src/')
 
 cache_gguf_dir = os.path.join(os.getcwd(), "src/quantized_model")
-saved_gguf_models_list = list_converted_gguf_models(cache_gguf_dir)
 
 # Callbacks support token-wise streaming
 callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
@@ -83,7 +82,7 @@ with gr.Blocks(css='style.css') as demo:
                         elem_id="title-container"
                     )
                     converted_models_chat = gr.Dropdown(
-                        choices=saved_gguf_models_list,
+                        choices=list_converted_gguf_models(cache_gguf_dir),
                         value=default_repo_id,
                         max_choices=5,
                         filterable=True,
@@ -128,7 +127,7 @@ with gr.Blocks(css='style.css') as demo:
                     with gr.Row():
                         with gr.Group():
                             converted_models = gr.Dropdown(
-                                choices=saved_gguf_models_list,
+                                choices=list_converted_gguf_models(cache_gguf_dir),
                                 value=default_repo_id,
                                 max_choices=5,
                                 filterable=True,
@@ -144,7 +143,7 @@ with gr.Blocks(css='style.css') as demo:
 
                         with gr.Group():
                             saved_gguf_models = gr.Dropdown(
-                                choices=saved_gguf_models_list,
+                                choices=list_converted_gguf_models(cache_gguf_dir),
                                 max_choices=5,
                                 filterable=True,
                                 info="gguf models available in the disk",
