@@ -17,7 +17,10 @@ def list_converted_gguf_models(cache_gguf_dir):
     return model_files
 
 def removeModelFromCache(model_name):
-    if model_name == default_repo_id:
+    config = ConfigParser()
+    config.read(config_path)
+    repo_id = config.get('Settings', 'repo_id')
+    if model_name == repo_id:
         raise gr.Error("Can not delete default model")
     else:
         gguf_model_name = model_name.replace("/", "__") + ".gguf"
