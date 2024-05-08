@@ -183,7 +183,7 @@ with gr.Blocks(css='style.css') as demo:
     def downloadConvertModel(model_repo_id):
         if model_repo_id:
             snapshot_download_and_convert_to_gguf(model_repo_id)
-            return gr.update(value=""), gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
+            return gr.update(value=""), gr.update(choices=list_converted_gguf_models(cache_gguf_dir)), gr.update(choices=list_converted_gguf_models(cache_gguf_dir)), gr.update(choices=list_converted_gguf_models(cache_gguf_dir))
         else:
             raise gr.Error("Repo can not be empty!")
         
@@ -213,7 +213,7 @@ with gr.Blocks(css='style.css') as demo:
 
     submit_event = msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(bot, chatbot, chatbot)
     # stop.click(None, None, None, cancels=[submit_event], queue=False)
-    download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models], queue=False, show_progress="full")
+    download_convert_btn.click(downloadConvertModel, model_repo_id, [model_repo_id, converted_models_chat, converted_models, saved_gguf_models], queue=False, show_progress="full")
     send_to_chat_btn.click(loadModelFromModelsTab, converted_models, [converted_models_chat, tabs], queue=False, show_progress="full")
     converted_models_chat.change(loadModelFromChatTab, converted_models_chat, converted_models_chat, queue=False, show_progress="full")
     remove_model_btn.click(removeModel, saved_gguf_models, [saved_gguf_models, converted_models_chat, converted_models], queue=False, show_progress="full")
