@@ -1,28 +1,33 @@
-## LLMinator: Run & Test LLMs locally
+## LLMinator: Run & Test LLMs directly from HuggingFace
 
 #### Gradio based tool with integrated chatbot to locally run & test LLMs directly from HuggingFace.
 
 An easy-to-use tool made with Gradio, LangChain, and Torch.
 
 ![LLMinator chat tab](https://github.com/Aesthisia/LLMinator/assets/89995648/0c7fd00f-610b-4ad1-8736-1f0cb7d212de)
+
 ![LLMinator models tab](https://github.com/Aesthisia/LLMinator/assets/89995648/44c03281-fb76-40c6-b1d3-2e395562ae16)
 
 ### ⚡ Features
 
-- Context-aware Chatbot.
+- Context-aware Streaming Chatbot.
 - Inbuilt code syntax highlighting.
 - Load any LLM repo directly from HuggingFace.
 - Supports both CPU & CUDA modes.
 - Enable LLM inference with [llama.cpp](https://github.com/ggerganov/llama.cpp) using [llama-cpp-python](https://github.com/abetlen/llama-cpp-python)
+- Convert models(Safetensors, pt to gguf etc)
 
-## 🚀 How to use
+## 🚀 Installation
 
 To use LLMinator, follow these simple steps:
 
-- Clone the LLMinator repository from GitHub.
-- Navigate to the directory containing the cloned repository.
-- Install the required dependencies by running `pip install -r requirements.txt`.
-- Build LLMinator with llama.cpp :
+#### Clone the LLMinator repository from GitHub & install requirements 
+    ```
+    git clone https://github.com/Aesthisia/LLMinator.git
+    cd LLMinator
+    pip install -r requirements.txt
+    ```
+#### Build LLMinator with [llama.cpp](https://github.com/ggerganov/llama.cpp):
 
   - Using `make`:
 
@@ -50,8 +55,9 @@ To use LLMinator, follow these simple steps:
     cmake ..
     ```
 
+#### Launch LLMinator on browser
 - Run the LLMinator tool using the command `python webui.py`.
-- Access the web interface by opening the provided URL in your browser.
+- Access the web interface by opening the [http://127.0.0.1:7860](http://127.0.0.1:7860) in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
 
 ### Command line arguments
@@ -64,20 +70,20 @@ To use LLMinator, follow these simple steps:
 
 ## Installation and Development Tips
 
-**Python Version:**
+#### Python Version
 
 - **Compatible Versions:** This project is compatible with Python versions 3.8+ to 3.11. Ensure you have one of these versions installed on your system. You can check your Python version by running `python --version` or `python3 --version` in your terminal.
 
-**Cmake and C Compiler:**
+#### Cmake and C Compiler
 
 - **Cmake Dependency:** If you plan to build the project using Cmake, make sure you have Cmake installed.
 - **C Compiler:** Additionally, you'll need a C compiler such as GCC. These are typically included with most Linux distributions. You can check this by running `gcc --version` in your terminal. Installation instructions for your specific operating system can be found online.
 
-**Visual Studio Code:**
+#### Visual Studio Code
 
 - **Visual Studio Installer:** If you're using Visual Studio Code for development, you'll need the C++ development workload installed. You can achieve this through the [Visual Studio Installer](https://visualstudio.microsoft.com/vs/features/cplusplus/)
 
-**GPU Acceleration (CUDA):**
+#### GPU Acceleration (CUDA):
 
 - **CUDA Installation:** To leverage GPU acceleration, you'll need CUDA installed on your system. Download instructions are available on the [NVIDIA website](https://developer.nvidia.com/cuda-toolkit).
 - **Torch Compatibility:** After installing CUDA, confirm CUDA availability with `torch.cuda.is_available()`. When using a GPU, ensure you follow the project's specific `llama-cpp-python` installation configuration for CUDA support.
