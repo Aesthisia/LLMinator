@@ -203,11 +203,11 @@ with gr.Blocks(css='style.css') as demo:
     
     def bot(history):
         print("Question: ", history[-1][0])
-        output = llm_chain.invoke({"question": history[-1][0]})
+        output = llm_chain.stream(history[-1][0])
         print("stream:", output)
         history[-1][1] = ""
         for character in output:
-            print(character)
+            # print(character)
             history[-1][1] += character
             yield history
 
