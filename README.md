@@ -22,11 +22,13 @@ An easy-to-use tool made with Gradio, LangChain, and Torch.
 To use LLMinator, follow these simple steps:
 
 #### Clone the LLMinator repository from GitHub & install requirements 
-    ```
-    git clone https://github.com/Aesthisia/LLMinator.git
-    cd LLMinator
-    pip install -r requirements.txt
-    ```
+
+```bash
+git clone https://github.com/Aesthisia/LLMinator.git
+cd LLMinator
+pip install -r requirements.txt
+```
+
 #### Build LLMinator with [llama.cpp](https://github.com/ggerganov/llama.cpp):
 
   - Using `make`:
@@ -59,6 +61,10 @@ To use LLMinator, follow these simple steps:
 - Run the LLMinator tool using the command `python webui.py`.
 - Access the web interface by opening the [http://127.0.0.1:7860](http://127.0.0.1:7860) in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
+
+#### [<img src="https://github.com/Aesthisia/LLMinator/assets/89995648/ab0b87f8-ac3d-4a33-8b1b-2ede0ad8150e" width="100" height="20">](#)
+
+Checkout this youtube [video](https://www.youtube.com/watch?v=OL8wRYbdjLE) to follow installation steps
 
 ### Command line arguments
 
