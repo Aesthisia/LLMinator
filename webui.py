@@ -33,7 +33,11 @@ def snapshot_download_and_convert_to_gguf(repo_id):
     gguf_model_path = quantize.quantize_model(repo_id)
     return gguf_model_path
 
-n_gpu_layers = 0
+n_gpu_layers = None
+if device == "cuda":
+    n_gpu_layers = -1
+else:
+    n_gpu_layers = 0
 n_ctx = 6000
 n_batch = 30
 n_parts = 1
@@ -41,11 +45,6 @@ temperature = 0.9
 max_tokens = 4095
 
 def init_llm_chain(model_path):    
-    if device == "cuda":
-        n_gpu_layers = -1
-    else:
-        n_gpu_layers = 0
-
     llm = LlamaCpp(
         model_path=model_path,
         n_gpu_layers=n_gpu_layers,
@@ -165,11 +164,11 @@ with gr.Blocks(css='style.css') as demo:
         with gr.Tab("Configs", id="configs"): 
                     with gr.Row():
                         with gr.Column(elem_id="configs-container"):
-                            n_gpu_layers_input = gr.Slider(0, 5000, value=5000, label="n_gpu_layers", visible=torch.cuda.is_available(), interactive= True)
+                            n_gpu_layers_input = gr.Slider(0, 5000, value=5000, step=1, label="n_gpu_layers", visible=torch.cuda.is_available(), interactive= True)
                             n_ctx_input = gr.Slider(100, 6000, value=6000, label="n_ctx", interactive= True)
                             n_batch_input = gr.Slider(1, 512, value=30, label="n_batch", visible=torch.cuda.is_available(), interactive= True)
-                            n_parts_input = gr.Slider(0, 10, step=1, value=1, label="n_parts", interactive= True)
-                            temperature_input = gr.Slider(0, 1, step=0.1, value=0.9, label="temperature", interactive= True)
+                            n_parts_input = gr.Slider(1, 10, step=1, value=1, label="n_parts", interactive= True)
+                            temperature_input = gr.Slider(0.1, 1, step=0.1, value=0.9, label="temperature", interactive= True)
                             max_tokens_input = gr.Slider(1, 4095, value=4095, label="max_tokens", interactive= True)
 
                             with gr.Row():
