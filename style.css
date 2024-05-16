@@ -5,3 +5,7 @@
 #title-container {
   max-height: 50px;
 }
+
+#configs-container {
+  max-width: 700px;
+}
