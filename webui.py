@@ -46,14 +46,6 @@ def init_llm_chain(model_path):
     else:
         n_gpu_layers = 0
 
-    print("inside llm_init_chain function")
-    print("n_gpu_layers",n_gpu_layers)
-    print("n_ctx", n_ctx)
-    print("n_batch", n_batch)
-    print("n_parts", n_parts)
-    print("temperature", temperature)
-    print("max_tokens", max_tokens)
-
     llm = LlamaCpp(
         model_path=model_path,
         n_gpu_layers=n_gpu_layers,
