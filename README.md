@@ -16,6 +16,7 @@ An easy-to-use tool made with Gradio, LangChain, and Torch.
 - Supports both CPU & CUDA modes.
 - Enable LLM inference with [llama.cpp](https://github.com/ggerganov/llama.cpp) using [llama-cpp-python](https://github.com/abetlen/llama-cpp-python)
 - Convert models(Safetensors, pt to gguf etc)
+- Customize LLM inference parameters(n_gpu_layers, temperature, max_tokens etc)
 
 ## 🚀 Installation
 
