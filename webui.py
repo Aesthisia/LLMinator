@@ -33,23 +33,29 @@ def snapshot_download_and_convert_to_gguf(repo_id):
     gguf_model_path = quantize.quantize_model(repo_id)
     return gguf_model_path
 
-def init_llm_chain(model_path):
-    if device == "cuda":
-        n_gpu_layers = -1
-    else:
-        n_gpu_layers = 0
+n_gpu_layers = None
+if device == "cuda":
+    n_gpu_layers = -1
+else:
+    n_gpu_layers = 0
+n_ctx = 6000
+n_batch = 30
+n_parts = 1
+temperature = 0.9
+max_tokens = 4095
 
+def init_llm_chain(model_path):    
     llm = LlamaCpp(
         model_path=model_path,
         n_gpu_layers=n_gpu_layers,
-        n_ctx=6000,
-        n_batch=30,
-        # temperature=0.9,
-        # max_tokens=4095,
-        n_parts=1,
+        n_ctx=n_ctx,
+        n_batch=n_batch,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        n_parts=n_parts,
         callback_manager=callback_manager, 
         verbose=True
-    )
+    )    
     
     template = """Question: {question}
         Answer: Let's work this out in a step by step way to be sure we have the right answer."""
@@ -155,8 +161,60 @@ with gr.Blocks(css='style.css') as demo:
                                 variant="danger",
                                 interactive=True
                             )
+        with gr.Tab("Configs", id="configs"): 
+                    with gr.Row():
+                        with gr.Column(elem_id="configs-container"):
+                            n_gpu_layers_input = gr.Slider(0, 5000, value=5000, step=1, label="n_gpu_layers", visible=torch.cuda.is_available(), interactive= True)
+                            n_ctx_input = gr.Slider(100, 6000, value=6000, label="n_ctx", interactive= True)
+                            n_batch_input = gr.Slider(1, 512, value=30, label="n_batch", visible=torch.cuda.is_available(), interactive= True)
+                            n_parts_input = gr.Slider(1, 10, step=1, value=1, label="n_parts", interactive= True)
+                            temperature_input = gr.Slider(0.1, 1, step=0.1, value=0.9, label="temperature", interactive= True)
+                            max_tokens_input = gr.Slider(1, 4095, value=4095, label="max_tokens", interactive= True)
+
+                            with gr.Row():
+                                config_update_btn = gr.Button(
+                                    value="Update Configs",
+                                    variant="primary",
+                                    interactive=True
+                                )
+
+                                config_reset_btn = gr.Button(
+                                    value="Reset Configs",
+                                    variant="primary",
+                                    interactive=True
+                                )
 
     llm_chain, llm = init_llm_chain(model_path)
+
+    def updateConfigs(n_gpu_layers_input, n_ctx_input, n_batch_input, n_parts_input, temperature_input, max_tokens_input):
+        global n_gpu_layers, n_ctx, n_batch, n_parts, temperature, max_tokens, llm_chain, llm
+        if torch.cuda.is_available():
+            n_gpu_layers = n_gpu_layers_input
+            if n_batch_input < n_ctx_input:
+                n_batch = n_batch_input
+            else:
+                raise gr.Error("n_batch should be between 1 and n_ctx")
+        else: 
+            n_gpu_layers = 0
+            n_ctx = 30
+
+        n_ctx = n_ctx_input
+        n_parts = n_parts_input
+        temperature = temperature_input
+        max_tokens = max_tokens_input
+        llm_chain, llm = init_llm_chain(model_path)
+        return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.Tabs(selected="chat")
+
+    def resetConfigs():
+        global n_gpu_layers, n_ctx, n_batch, n_parts, temperature, max_tokens, llm_chain, llm
+        n_gpu_layers = 0
+        n_ctx = 6000
+        n_batch = 30
+        n_parts = 1
+        temperature = 0.9
+        max_tokens = 4095
+        llm_chain, llm = init_llm_chain(model_path)
+        return gr.update(value="0"), gr.update(value="6000"), gr.update(value="30"), gr.update(value="1"), gr.update(value="0.9"), gr.update(value="4095")
 
     def updateExecutionProvider(provider, gguf_model):
         global device
@@ -218,6 +276,8 @@ with gr.Blocks(css='style.css') as demo:
     converted_models_chat.change(loadModelFromChatTab, converted_models_chat, converted_models_chat, queue=False, show_progress="full")
     remove_model_btn.click(removeModel, saved_gguf_models, [saved_gguf_models, converted_models_chat, converted_models], queue=False, show_progress="full")
     execution_provider.change(updateExecutionProvider, [execution_provider, converted_models_chat], execution_provider, queue=False, show_progress="full")
+    config_update_btn.click(updateConfigs, [n_gpu_layers_input, n_ctx_input, n_batch_input, n_parts_input, temperature_input, max_tokens_input], [n_gpu_layers_input, n_ctx_input, n_batch_input, n_parts_input, temperature_input, max_tokens_input, tabs], queue=False, show_progress="full")
+    config_reset_btn.click(resetConfigs, None, [n_gpu_layers_input, n_ctx_input, n_batch_input, n_parts_input, temperature_input, max_tokens_input], queue=False, show_progress="full")
 
 demo.queue()
 demo.launch(server_name=args.host, server_port=args.port, share=args.share)
