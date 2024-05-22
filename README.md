@@ -17,48 +17,50 @@ An easy-to-use tool made with Gradio, LangChain, and Torch.
 - Enable LLM inference with [llama.cpp](https://github.com/ggerganov/llama.cpp) using [llama-cpp-python](https://github.com/abetlen/llama-cpp-python)
 - Convert models(Safetensors, pt to gguf etc)
 - Customize LLM inference parameters(n_gpu_layers, temperature, max_tokens etc)
+- Real-time text generation via websocket generate api.
 
 ## 🚀 Installation
 
 To use LLMinator, follow these simple steps:
 
-#### Clone the LLMinator repository from GitHub & install requirements 
+#### Clone the LLMinator repository from GitHub & install requirements
 
-```bash
-git clone https://github.com/Aesthisia/LLMinator.git
-cd LLMinator
-pip install -r requirements.txt
-```
+    ```
+    git clone https://github.com/Aesthisia/LLMinator.git
+    cd LLMinator
+    pip install -r requirements.txt
+    ```
 
 #### Build LLMinator with [llama.cpp](https://github.com/ggerganov/llama.cpp):
 
-  - Using `make`:
+- Using `make`:
 
-    - On Linux or MacOS:
+  - On Linux or MacOS:
 
-      ```bash
-      make
-      ```
-
-    - On Windows:
-
-      1. Download the latest fortran version of [w64devkit](https://github.com/skeeto/w64devkit/releases).
-      2. Extract `w64devkit` on your pc.
-      3. Run `w64devkit.exe`.
-      4. Use the `cd` command to reach the `LLMinator` folder.
-      5. From here you can run:
-         ```bash
-         make
-         ```
-
-  - Using `CMake`:
     ```bash
-    mkdir build
-    cd build
-    cmake ..
+    make
     ```
 
+  - On Windows:
+
+    1. Download the latest fortran version of [w64devkit](https://github.com/skeeto/w64devkit/releases).
+    2. Extract `w64devkit` on your pc.
+    3. Run `w64devkit.exe`.
+    4. Use the `cd` command to reach the `LLMinator` folder.
+    5. From here you can run:
+       ```bash
+       make
+       ```
+
+- Using `CMake`:
+  ```bash
+  mkdir build
+  cd build
+  cmake ..
+  ```
+
 #### Launch LLMinator on browser
+
 - Run the LLMinator tool using the command `python webui.py`.
 - Access the web interface by opening the [http://127.0.0.1:7860](http://127.0.0.1:7860) in your browser.
 - Start interacting with the chatbot and experimenting with LLMs!
@@ -74,6 +76,24 @@ Checkout this youtube [video](https://www.youtube.com/watch?v=OL8wRYbdjLE) to fo
 | --host           | 127.0.0.1 | Host or IP address on which the server will listen for incoming connections |
 | --port           | 7860      | Launch gradio with given server port                                        |
 | --share          | False     | This generates a public shareable link that you can send to anybody         |
+
+### WebSocket Generate API
+
+The `/generate` API route enables real-time text generation by allowing you to submit prompts and receive responses.
+
+**Local Testing:**
+
+Run `uvicorn main:app --reload`<br/>
+Connect to `ws://localhost:8000/generate`
+
+**Testing on Any Machine:**
+
+Run `uvicorn main:app --reload --host 0.0.0.0 --port 8000`<br/>
+Use `ws://your-ip:8000/generate` (replace with your IP)
+
+**Integration with Frontends:**
+
+The provided `example/index.html` demonstrates basic usage of the generate API. You can integrate it with any frontend framework like React.js
 
 ## Installation and Development Tips
 

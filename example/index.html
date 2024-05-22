@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLMinator</title>
+  </head>
+  <body>
+    <h1>LLMinator</h1>
+    <form action="" onsubmit="sendMessage(event)">
+      <input type="text" id="promptText" autocomplete="off" />
+      <button>Send</button>
+    </form>
+    <textarea id="response"> </textarea>
+    <script>
+      var input = document.getElementById("promptText");
+      var response = document.getElementById("response");
+      input.style.minWidth = "600px";
+      input.style.padding = "10px";
+      response.style.width = "calc(100vw - 100px)";
+      response.style.minHeight = "400px";
+      var ws = new WebSocket("ws://localhost:8000/generate");
+      ws.onmessage = function (event) {
+        var content = document.createTextNode(event.data);
+        response.appendChild(content);
+      };
+      function sendMessage(event) {
+        ws.send(input.value);
+        input.value = "";
+        event.preventDefault();
+      }
+    </script>
+  </body>
+</html>
