@@ -17,7 +17,7 @@ An easy-to-use tool made with Gradio, LangChain, and Torch.
 - Enable LLM inference with [llama.cpp](https://github.com/ggerganov/llama.cpp) using [llama-cpp-python](https://github.com/abetlen/llama-cpp-python)
 - Convert models(Safetensors, pt to gguf etc)
 - Customize LLM inference parameters(n_gpu_layers, temperature, max_tokens etc)
-- Real-time text generation via websocket generate api.
+- Real-time text generation via websockets, enabling seamless integration with different frontend frameworks.
 
 ## 🚀 Installation
 
@@ -77,23 +77,13 @@ Checkout this youtube [video](https://www.youtube.com/watch?v=OL8wRYbdjLE) to fo
 | --port           | 7860      | Launch gradio with given server port                                        |
 | --share          | False     | This generates a public shareable link that you can send to anybody         |
 
-### WebSocket Generate API
+### Connect to WebSocket for generation
 
-The `/generate` API route enables real-time text generation by allowing you to submit prompts and receive responses.
-
-**Local Testing:**
-
-Run `uvicorn main:app --reload`<br/>
-Connect to `ws://localhost:8000/generate`
-
-**Testing on Any Machine:**
-
-Run `uvicorn main:app --reload --host 0.0.0.0 --port 8000`<br/>
-Use `ws://your-ip:8000/generate` (replace with your IP)
+Connect to [ws://localhost:7861/](ws://localhost:7861/) for real-time text generation. Submit prompts and receive responses through the websocket connection.
 
 **Integration with Frontends:**
 
-The provided `example/index.html` demonstrates basic usage of the generate API. You can integrate it with any frontend framework like React.js
+The provided `example/index.html` demonstrates basic usage of text generation through websocket connection. You can integrate it with any frontend framework like React.js
 
 ## Installation and Development Tips
 

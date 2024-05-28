@@ -19,7 +19,7 @@
       input.style.padding = "10px";
       response.style.width = "calc(100vw - 100px)";
       response.style.minHeight = "400px";
-      var ws = new WebSocket("ws://localhost:8000/generate");
+      var ws = new WebSocket("ws://localhost:7861/");
       ws.onmessage = function (event) {
         var content = document.createTextNode(event.data);
         response.appendChild(content);

@@ -1,4 +1,4 @@
-import os, torch, argparse
+import os, torch, argparse, asyncio, websockets, threading
 import gradio as gr
 from src import quantize
 from langchain import PromptTemplate
@@ -74,6 +74,21 @@ def parse_args():
 args = parse_args()
 
 model_path = snapshot_download_and_convert_to_gguf(default_repo_id)
+
+async def generate(websocket):
+        async for message in websocket:
+            output = llm_chain.stream(message)
+            for character in output:
+                await asyncio.sleep(0)
+                await websocket.send(character)
+
+async def start_websockets():
+    print(f"Starting WebSocket server on port 7861 ...")
+    async with websockets.serve(generate, "localhost", 7861):
+        await asyncio.Future()
+
+async def main():
+    await start_websockets()
 
 with gr.Blocks(css='style.css') as demo:
     with gr.Tabs(selected="chat") as tabs:
@@ -280,4 +295,10 @@ with gr.Blocks(css='style.css') as demo:
     config_reset_btn.click(resetConfigs, None, [n_gpu_layers_input, n_ctx_input, n_batch_input, n_parts_input, temperature_input, max_tokens_input], queue=False, show_progress="full")
 
 demo.queue()
-demo.launch(server_name=args.host, server_port=args.port, share=args.share)
+
+def launch_demo():
+    demo.launch(server_name=args.host, server_port=args.port, share=args.share)
+
+if __name__ == "__main__":
+    threading.Thread(target=launch_demo).start()
+    asyncio.run(main())
