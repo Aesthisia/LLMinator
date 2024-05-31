@@ -36,6 +36,6 @@ def quantize_model(repo_id):
         '--outfile', outfile
     ]
 
-    subprocess.run(command, check=True, shell=True)
+    subprocess.run(command, check=True)
 
     return outfile
