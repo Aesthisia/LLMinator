@@ -2,5 +2,5 @@ gradio==4.27.0
 huggingface_hub==0.21.1
 langchain==0.1.14
 torch==2.1.2
-llama-cpp-python==0.1.9
+llama-cpp-python==0.2.76
 fastapi==0.110.1
