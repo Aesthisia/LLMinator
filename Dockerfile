@@ -17,8 +17,8 @@ COPY . /app
 # Step 5: Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 6: Compile the source code
+# Step 6: Run makefile to build LLMinator
 RUN make
 
-# Step 7: Run The APP
+# Step 7: Launch LLMinator
 CMD ["python3","webui.py"]
